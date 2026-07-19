@@ -1,12 +1,16 @@
 name: poll-jobs
 on:
-  schedule: [{cron: "*/10 * * * *"}]   # every 10 min (Actions may add jitter; fine)
+  schedule: [{cron: "*/20 * * * *"}]   # every 20 min (Actions may add jitter; fine)
   workflow_dispatch:
+
+concurrency:
+  group: poll-jobs          # never poll from two runners at once (polite client)
+  cancel-in-progress: false
 
 jobs:
   poll:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
