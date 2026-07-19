@@ -1,0 +1,19 @@
+# secrets & credentials
+.env
+token.json
+credentials.json
+
+# bulk public datasets (re-downloadable, too big for git)
+data/uscis/
+data/dol/
+
+# generated artifacts
+*.pdf
+backups/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/

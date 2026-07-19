@@ -1,0 +1,28 @@
+[project]
+name = "jobops"
+version = "0.1.0"
+description = "Personal job-search operating system: fast ATS ingestion, sponsorship targeting, resume tailoring, referral CRM."
+requires-python = ">=3.12"
+dependencies = [
+    "psycopg[binary,pool]>=3.2",
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["jobops"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: requires a live Postgres (skipped unless DATABASE_URL is set)",
+]
