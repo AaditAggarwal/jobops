@@ -7,6 +7,7 @@ See DESIGN.md §4.2.
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from datetime import datetime
@@ -149,19 +150,28 @@ def polite_client(**kwargs: Any) -> httpx.Client:
 
 
 def get_with_backoff(
-    client: httpx.Client, url: str, retries: int = 2, **kwargs: Any
+    client: httpx.Client, url: str, retries: int | None = None, **kwargs: Any
 ) -> httpx.Response:
     """GET with simple backoff on 429/5xx; returns the last response.
 
     Polite-client rule: we never hammer — on throttle/server error, sleep
-    (respecting Retry-After when present) and retry a couple of times.
-    404 and other 4xx return immediately for the caller to interpret.
+    (respecting Retry-After when present) and retry. 404 and other 4xx
+    return immediately for the caller to interpret.
+
+    Patience is env-tunable because shared CI runner IPs get 429'd far more
+    than a home IP, and long sleeps × many boards blow the workflow timeout:
+    JOBOPS_BACKOFF_RETRIES (default 2) and JOBOPS_BACKOFF_CAP seconds
+    (default 30). A board that stays throttled is skipped this cycle and
+    self-heals on the next run.
     """
+    if retries is None:
+        retries = int(os.environ.get("JOBOPS_BACKOFF_RETRIES", "2"))
+    cap = float(os.environ.get("JOBOPS_BACKOFF_CAP", "30"))
     resp = client.get(url, **kwargs)
     for attempt in range(retries):
         if resp.status_code != 429 and resp.status_code < 500:
             break
         wait = float(resp.headers.get("Retry-After") or 2 ** (attempt + 1))
-        time.sleep(min(wait, 30))
+        time.sleep(min(wait, cap))
         resp = client.get(url, **kwargs)
     return resp

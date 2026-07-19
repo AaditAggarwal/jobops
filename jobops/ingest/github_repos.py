@@ -8,6 +8,7 @@ ATS pollers can't reach. See DESIGN.md §4.3.
 from __future__ import annotations
 
 import os
+import time
 from datetime import datetime, timezone
 from typing import Any
 
@@ -69,6 +70,7 @@ def run() -> None:
         headers["Authorization"] = f"Bearer {tok}"
     all_new: list[str] = []
     failures = 0
+    t0 = time.monotonic()
     with polite_client(headers=headers) as client:
         for owner, repo, branch, path in REPOS:
             try:
@@ -78,7 +80,8 @@ def run() -> None:
                 print(f"[github_repo:{owner}/{repo}] {e}")
     notify_new_jobs(all_new)
     heartbeat("github_repos", ok=failures == 0,
-              detail=f"{len(REPOS) - failures}/{len(REPOS)} repos, {len(all_new)} new")
+              detail=f"{len(REPOS) - failures}/{len(REPOS)} repos, "
+                     f"{len(all_new)} new, {time.monotonic() - t0:.0f}s")
     print(f"[github_repo] done: {len(all_new)} new, {failures} failed repos")
 
 

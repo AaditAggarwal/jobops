@@ -6,6 +6,7 @@ See DESIGN.md §4.3.
 
 from __future__ import annotations
 
+import time
 from datetime import datetime, timezone
 from typing import Any
 
@@ -65,6 +66,7 @@ def run() -> None:
     tokens = load_watchlist().get("lever", [])
     all_new: list[str] = []
     failures = 0
+    t0 = time.monotonic()
     with polite_client() as client:
         for i, token in enumerate(tokens, 1):
             try:
@@ -76,7 +78,8 @@ def run() -> None:
                 print(f"[lever] {i}/{len(tokens)} boards, {len(all_new)} new so far")
     notify_new_jobs(all_new)
     heartbeat("lever", ok=failures == 0,
-              detail=f"{len(tokens) - failures}/{len(tokens)} boards, {len(all_new)} new")
+              detail=f"{len(tokens) - failures}/{len(tokens)} boards, "
+                     f"{len(all_new)} new, {time.monotonic() - t0:.0f}s")
     print(f"[lever] done: {len(all_new)} new, {failures} failed boards")
 
 
