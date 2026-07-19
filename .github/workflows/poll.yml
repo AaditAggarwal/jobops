@@ -20,6 +20,7 @@ jobs:
           python -m jobops.ingest.smartrecruiters
           python -m jobops.ingest.github_repos
           python -m jobops.enrich.dedup
+          python -m jobops.enrich.retention
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}     # hosted Postgres (e.g. Supabase pooler URL)
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
