@@ -6,7 +6,7 @@ on:
 jobs:
   poll:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,3 +25,4 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}     # hosted Postgres (e.g. Supabase pooler URL)
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          PYTHONUNBUFFERED: "1"                          # stream poller logs live in the Actions UI
