@@ -62,6 +62,7 @@ every session, update it at the end of every session.
 - GitHub Actions cron for stateless pollers (secrets: DATABASE_URL,
   DISCORD_WEBHOOK, ANTHROPIC_API_KEY, GH_PAT). Google APIs (Gmail, Calendar) via
   google-api-python-client with OAuth desktop flow; token.json is gitignored.
+- LLM calls go through jobops/llm.py; provider configured via env
 
 ## Repository layout (authoritative)
 

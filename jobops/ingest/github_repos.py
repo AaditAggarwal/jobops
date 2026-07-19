@@ -64,7 +64,8 @@ def poll_repo(owner: str, repo: str, branch: str, path: str,
 def run() -> None:
     """Poll every listing repo sequentially; one failure never kills the run."""
     headers = {}
-    if tok := os.environ.get("GITHUB_TOKEN"):
+    # GITHUB_TOKEN in Actions (mapped from the GH_PAT secret); GH_PAT locally via .env
+    if tok := os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_PAT"):
         headers["Authorization"] = f"Bearer {tok}"
     all_new: list[str] = []
     failures = 0

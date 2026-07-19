@@ -1,8 +1,34 @@
 # PROGRESS
 
-## Status: Phase 1 complete (scaffold + core schema + migration runner)
+## Status: Phase 3 complete (ingestion engine: 5 pollers, watchlist, notify, dedup, scheduling)
 
 ## Sessions completed
+
+### Session 2 — 2026-07-19 — Phase 3: ingestion engine
+
+**Built:**
+- `jobops/ingest/common.py`: `normalize_company`, `looks_new_grad`, `upsert_company`, `insert_job` (ON CONFLICT (source, external_id) DO NOTHING, is_new_grad computed at insert, raw wrapped in Jsonb), `polite_client` (honest UA, 20s timeout), `get_with_backoff` (429/5xx retry honoring Retry-After), `load_watchlist`.
+- Pollers `greenhouse.py`, `lever.py`, `ashby.py`, `smartrecruiters.py`, `github_repos.py`: each with pure `map_posting()` (fixture-tested), `poll_board()`, `run()` + `__main__`, per-board try/except-continue with `[source:token]` logs, one heartbeat row per run.
+- `jobops/notify/discord.py`: `notify_new_job` (new-grad only, sponsor badge) + `notify_new_jobs` batch wrapper with a per-run cap of 15 pings (webhook throttles ~30/min; first backfill would otherwise send thousands). No-ops with one warning if DISCORD_WEBHOOK unset.
+- `jobops/enrich/dedup.py`: pure `find_duplicates` (same normalized company + token_sort_ratio ≥ 92 + same location + ≤14 days → later row skipped, earliest kept) + `run()`; `migrations/002_jobs_note.sql` adds `jobs.note` for the skip reason.
+- `data/watchlist.yaml` (18 greenhouse / 12 lever / 16 ashby / 9 smartrecruiters tokens, every one verified live this session), `scripts/check_watchlist.py` (flags dead tokens, exit 1), `scripts/poll_all.py` (all pollers + dedup, local cron equivalent), `.github/workflows/poll.yml` (*/10 cron).
+- Tests: 80 passing — `test_ingest_common.py` (normalize/new-grad edge cases), `test_pollers.py` (field mapping against real trimmed fixtures in `tests/fixtures/`), `test_dedup.py` (11 cases over the pure decision logic).
+
+**Verified acceptance criteria:** first `uv run python scripts/poll_all.py` inserted 15,512 real jobs across 901 companies (5,083 greenhouse / 2,149 lever / 2,154 ashby / 4,208 smartrec / 1,918 github_repo; 268 flagged new-grad; 782 cross-source dups skipped); second run inserted 0 everywhere (idempotent); Discord pings fired (15/poller cap hit); heartbeat rows ok=t for all six sources; pytest 80 passed 1 skipped.
+
+**Decisions / deviations from DESIGN.md sketches:**
+- `upsert_company` uses `COALESCE(NULLIF(EXCLUDED.ats_token,''), companies.ats_token)` so token-less sources (github_repos) can't clobber a real board token — the §4.2 sketch would have.
+- Greenhouse `posted_at` prefers `first_published` over `updated_at` (updated_at moves on every edit); Ashby uses `descriptionPlain` (exists in the real payload) over `descriptionHtml`.
+- SmartRecruiters: the API 200s with `totalFound: 0` for wrong tokens — never 404s — so `check_watchlist` treats 0 postings as dead. List endpoint has no JD, so the detail endpoint is fetched for newly inserted jobs only, newest first, capped at 40/board/run (`DETAIL_CAP`) — backfill rows beyond the cap keep description NULL.
+- Notifications are capped at 15 per poller run and fire before dedup, so a cross-source duplicate can ping twice within one cycle. Accepted for now.
+- `poll.yml` runs smartrecruiters + dedup beyond the §4.4 sketch; DESIGN.md §4.3's SimplifyJobs path needed branch `dev` (fetched via raw.githubusercontent.com, no contents-API quota).
+- `github_repos.py` accepts GITHUB_TOKEN (Actions) or GH_PAT (local .env) for its auth header.
+
+**Next steps (Phase 4 candidates, per DESIGN.md §5):**
+- `migrations/003_sponsors.sql` + `jobops/etl/uscis_hub.py` / `dol_lca.py` (user must download USCIS/DOL CSVs into data/)
+- `jobops/enrich/sponsor_match.py` + thorough tests (highest-stakes pure function #2)
+- Backfill: SmartRecruiters rows beyond the detail cap have description NULL — enrichment should re-fetch or tolerate.
+
 
 ### Session 1 — 2026-07-19 — Phase 1: scaffold, docker, core schema, migrate
 
@@ -32,5 +58,8 @@
 - `.github/workflows/poll.yml` once pollers exist
 
 ## Notes for future sessions
+- Local runs don't auto-load `.env` — pollers read os.environ (DATABASE_URL falls back to the docker default; DISCORD_WEBHOOK/GH_PAT must be exported or injected). Consider a tiny env loader or `uv run --env-file` later.
+- Discord webhook is set in the user's `.env` and verified working (2026-07-19).
+- Lever/Ashby boards `plaid`, `kraken`, `voleon`, `deel` resolve but had 0 postings on 2026-07-19 — watchlist keeps them; `check_watchlist.py` only treats 0-postings as dead for SmartRecruiters.
 - psycopg_pool emits a DeprecationWarning unless `open=True` is passed to ConnectionPool — already handled in db.py; keep it if the pool setup is ever touched.
 - `scripts/backup.sh` is bash — on Windows run it via Git Bash or WSL; consider a scheduled task later.
