@@ -10,72 +10,354 @@
 # (boards.greenhouse.io/stripe -> stripe). Verify additions with
 #   uv run python scripts/check_watchlist.py
 # which flags dead/renamed boards (SmartRecruiters never 404s — zero postings
-# is the "dead token" signal there). Curate freely; pollers read this file on
-# every run, no restart needed.
+# is the "dead token" signal there; huge SR boards are excluded to keep the
+# pagination budget sane). Curate freely; pollers reload this file every run.
+#
+# Curation policy (2026-07-19 expansion): no ITAR/defense/clearance shops
+# (can't sponsor F-1->H-1B), no staffing/consulting mills, no non-US-only
+# boards. Sources: SimplifyJobs listing URLs already in the DB + hand-curated
+# sponsor-friendly companies, every token verified against the live API.
+
 
 greenhouse:
-  - stripe
-  - databricks
-  - duolingo
-  - robinhood
-  - coinbase
-  - airbnb
-  - pinterest
-  - twilio
-  - doordashusa
-  - cloudflare
-  - mongodb
-  - datadog
-  - gitlab
-  - dropbox
-  - samsara
+  - 3redpartners  # 3RedPartners
+  - abnormalsecurity  # Abnormal Security
+  - acuitymd  # AcuityMD
+  - adyen  # Adyen
   - affirm
-  - roblox
+  - airbnb
+  - airtable  # Airtable
+  - akunacapital  # Akuna Capital
+  - alarmcom  # Alarm.com
+  - americaninstitutesforresearch  # American Institutes for Research
+  - amplitude  # Amplitude
   - anthropic
+  - apptronik  # Apptronik
+  - aquaticcapitalmanagement  # Aquatic Capital Management
+  - arizeai  # Arize AI
+  - asana  # Asana
+  - ashfieldadvisory  # Inizio
+  - atomicmachines  # Atomic Machines
+  - attentive  # Attentive
+  - aurorainnovation  # Aurora Innovation
+  - axle  # Axle
+  - axq  # AXQ Capital
+  - botauto  # Bot Auto
+  - boxinc  # Box
+  - bracebridgecapital  # Bracebridge Capital
+  - braze  # Braze
+  - brex  # Brex
+  - canonical  # Canonical
+  - carta  # Carta
+  - catapultsports  # Catapult
+  - celonis  # Celonis
+  - censys  # Censys
+  - chainguard  # Chainguard
+  - charterup  # CharterUP
+  - chicagotrading  # Chicago Trading Company
+  - chime  # Chime
+  - clear  # CLEAR
+  - cloudflare
+  - cockroachlabs  # Cockroach Labs
+  - coinbase
+  - coreweave  # CoreWeave
+  - cresta  # Cresta
+  - databricks
+  - datadog
+  - dbtlabsinc  # dbt Labs
+  - ddome  # DataDome
+  - discord  # Discord
+  - doordashusa
+  - dropbox
+  - drweng  # DRW
+  - duolingo
+  - dvtrading  # DV Trading
+  - elastic  # Elastic
+  - elwoodtechnologies  # Elwood Technologies
+  - epicgames  # Epic Games
+  - fastly  # Fastly
+  - figma  # Figma
+  - figureai  # Figure
+  - fiveringsllc  # Five Rings Capital
+  - flexport  # Flexport
+  - focusfinancialpartners  # Focus Financial Partners
+  - furtherearlycareer  # Further
+  - galaxydigitalservices  # Galaxy
+  - garnerhealth  # Garner Health
+  - gemini  # Gemini
+  - genevatrading  # Geneva Trading
+  - getbuilt  # Built Technologies
+  - gitlab
+  - gleanwork  # Glean
+  - grafanalabs  # Grafana Labs
+  - graphcore  # Graphcore
+  - gusto  # Gusto
+  - harborglobal  # Harbor
+  - headlandstechnologiesllc  # Headlands Tech Holdings
+  - humansignal  # HumanSignal
+  - icapitalnetwork  # iCapital Network
+  - instacart  # Instacart
+  - instalilyai  # InstaLILY
+  - janestreet  # Jane Street
+  - jumio  # Jumio
+  - jumptrading  # Jump Trading
+  - klaviyo  # Klaviyo
+  - koboldmetals  # KoBold Metals
+  - latitude  # Latitude AI
+  - lyft  # Lyft
+  - marqeta  # Marqeta
+  - mavensecuritiesholdingltd  # Maven Securities
+  - maybellquantum  # Maybell Quantum Industries
+  - maymobility  # May Mobility
+  - mixpanel  # Mixpanel
+  - mongodb
+  - mozilla  # Mozilla
+  - mw-tech-grad  # Marshall Wace
+  - netlify  # Netlify
+  - newsbreak  # NewsBreak
+  - nisc  # National Information Solutions Cooperative (NISC)
+  - nuro  # Nuro
+  - oklo  # Oklo
+  - okta  # Okta
+  - optiverus  # Optiver US
+  - oscar  # Oscar Health
+  - pathrobotics  # Path Robotics
+  - peloton  # Peloton
+  - peregrinetechnologies  # Peregrine
+  - pharomanagement  # Pharo Management
+  - pingidentity  # Ping Identity
+  - pinterest
+  - planetlabs  # Planet
+  - point72  # Point72
+  - purestorage  # Pure Storage
+  - queracomputinginc  # QuEra Computing
+  - quince  # Quince
+  - radixuniversity  # Radix Trading
+  - reddit  # Reddit
+  - redwoodmaterials  # Redwood Materials
+  - relaypro  # Relay
+  - ripple  # Ripple
+  - robinhood
+  - roblox
+  - roboforce  # RoboForce
+  - sambanovasystems  # SambaNova
+  - samsara
+  - scaleai  # Scale AI
+  - schonfeld  # Schonfeld
+  - shifttechnology  # Shift
+  - sigmacomputing  # Sigma Computing
+  - simplisafe  # SimpliSafe
+  - skildai-careers  # Skild AI
+  - snorkelai  # Snorkel AI
+  - sonyinteractiveentertainmentglobal  # PlayStation
+  - sonypicturesimageworks  # Sony Pictures Imageworks
+  - squarespace  # Squarespace
+  - stripe
+  - tailscale  # Tailscale
+  - thealleninstitute  # The Allen Institute for AI
+  - thenewyorktimes  # The New York Times
+  - thenuclearcompany  # The Nuclear Company
+  - togetherai  # Together AI
+  - torcrobotics  # Torc Robotics
+  - transmarketgroup  # TransMarket Group
+  - tripadvisor  # TripAdvisor
+  - truveta  # Truveta
+  - twilio
+  - twitch  # Twitch
+  - upgrade  # Upgrade
+  - vercel  # Vercel
+  - verkada  # Verkada
+  - virtu  # Virtu Financial
+  - voloridgeinvestmentmanagement  # Voloridge
+  - walleyecapital-external-students  # Walleye Capital
+  - waymo  # Waymo
+  - wehrtyou  # Hudson River Trading
+  - wizinc  # Wiz
+  - xai  # xAI
+  - zocdoc  # Zocdoc
 
 lever:
-  - palantir
-  - plaid          # board live but 0 postings as of 2026-07 — keeping, costs one request
-  - spotify
-  - kraken         # board live but 0 postings as of 2026-07
-  - zoox
-  - voleon         # board live but 0 postings as of 2026-07
-  - matchgroup
-  - veeva
-  - octoenergy
-  - goodleap
+  - aledade  # Aledade
   - brillio-2
+  - commercearchitects  # Commerce Architects
+  - entrata  # Entrata
+  - field-ai  # Field AI
+  - goodleap
+  - highspot  # Highspot
+  - hive  # Hive
+  - ivo  # Ivo
+  - kitware  # Kitware
+  - kraken
+  - matchgroup
+  - metergysolutions  # Metergy Solutions
+  - octoenergy
+  - outreach  # Outreach
+  - palantir
+  - pigment  # Pigment
+  - plaid
+  - protective  # Protective Life
+  - schmidt-entities  # Schmidt Sciences
   - shieldai
+  - shyftlabs  # ShyftLabs
+  - SimbeRobotics  # Simbe Robotics
+  - spotify
+  - veeva
+  - voleon
+  - whoop  # Whoop
+  - wintermute-trading  # Wintermute
+  - woven-by-toyota  # Woven
+  - zoox
 
 ashby:
-  - ramp
-  - linear
-  - openai
-  - notion
-  - replit
-  - supabase
-  - posthog
-  - deel
-  - modal
-  - elevenlabs
-  - sierra
-  - cohere
-  - vanta
+  - 8vc  # 8VC
+  - Abound  # Abound
+  - abridge  # Abridge
+  - aditude  # Aditude
+  - AeroVect  # AeroVect
+  - AfterQuery  # AfterQuery
+  - algo1  # algo1
+  - amigo  # Amigo AI
+  - amplify  # Amplify
+  - anyscale  # Anyscale
+  - anything  # Anything
+  - astronomer  # Astronomer
+  - attio  # Attio
+  - baseten  # Baseten
+  - batoncorporation  # Baton Corporation
+  - beaconai  # Beacon AI
+  - blissway  # Blissway
+  - blitzy  # Blitzy
+  - brainco  # Brain Co.
+  - capy  # Capy
+  - cerebras  # Cerebras
+  - character  # Character.AI
+  - checkout.com  # Checkout.com
+  - clera  # Clera
   - clickhouse
+  - cogent-security  # Cogent Security
+  - cohere
+  - collective  # Collective
+  - Commure  # Commure
+  - confido  # Confido
+  - corvus-robotics  # Corvus Robotics
   - cursor
+  - cylake-inc  # Cylake
+  - decagon  # Decagon
+  - deel
   - docker
+  - dyna-robotics  # Dyna Robotics
+  - elevenlabs
+  - ellipsislabs  # Ellipsis Labs
+  - encord  # Encord
+  - Etched  # Etched
+  - exa  # Exa
+  - faros-ai  # Faros AI
+  - figure  # Figure
+  - flashpoint.io  # Flashpoint
+  - fundamentalresearchlabs  # Fundamental Research Labs
+  - Fuse  # Fuse Energy
+  - gen-digital  # Gen Digital
+  - generalist  # Generalist
+  - gigaml  # Giga AI
+  - glia  # Glia
+  - glide  # Glide
+  - handshake  # Handshake
+  - harvey  # Harvey
+  - haydenai  # Hayden AI
+  - heron-power  # Heron Power
+  - hex  # Hex
+  - hilberts  # Hilbert
+  - hinge-health  # Hinge Health
+  - iambic-therapeutics  # Iambic Therapeutics
+  - icon  # Icon
+  - julius  # Julius AI
+  - klarity-ai  # Klarity
+  - kong  # Kong
+  - lambda  # Lambda
+  - langchain  # LangChain
+  - Lightfield  # Lightfield
+  - linear
+  - liquid  # Liquid
+  - liveflow  # LiveFlow
+  - Lynk  # Lynk
+  - magical  # Magical
+  - makai-labs  # Makai Labs
+  - mercor  # Mercor
+  - meticulous  # Meticulous
+  - Mintlify  # Mintlify
+  - mirage  # Mirage
+  - moab  # Moab
+  - modal
+  - n1  # N1
+  - neon  # Neon
+  - netic  # Cybernetic Labs
+  - northslope-technologies  # Northslope Technologies
+  - notion
+  - openai
+  - parallel  # Parallel Web Systems
+  - perplexity  # Perplexity
+  - pinecone  # Pinecone
+  - plaid  # Plaid
+  - PointOne  # PointOne
+  - polymarket  # Polymarket
+  - posthog
+  - Preference-Model  # Preference Model
+  - pylon-labs  # Pylon
+  - quantcast  # Quantcast
+  - quora  # Quora
+  - ramp
+  - realmalliance  # Realm
+  - replit
+  - rhoda-ai  # Rhoda AI
+  - rivet  # Rivet Industries
+  - runway  # Runway
+  - sardine  # Sardine
+  - sentilink  # SentiLink
+  - sentra  # Sentra
+  - sentry  # Sentry
+  - serverobotics  # Serve Robotics
+  - sewer-ai  # SewerAI
+  - sierra
+  - snowflake  # Snowflake
+  - socket  # Socket
+  - specter  # Specter
+  - strala-ai  # Strala Group
+  - sunday  # Sunday Robotics
+  - suno  # Suno
+  - supabase
+  - Talos-Trading  # Talos
+  - teamworks  # Teamworks
+  - temporal  # Temporal
+  - teza-technologies  # Teza Technologies
+  - thumbtack  # Thumbtack
+  - titan-msp  # Titan
+  - tracebit  # Tracebit
+  - tracer  # Tracer Cloud
+  - triumph-arcade  # Triumph
+  - trm-labs  # TRM Labs
+  - uncountable  # Uncountable
+  - vanta
+  - voxel  # Voxel
+  - warp  # Warp
+  - zapier  # Zapier
+  - Zello  # Zello
 
-# SmartRecruiters tokens are opaque (case-sensitive, often not the brand name)
-# and the API 200s with 0 postings for wrong guesses — this list is smaller
-# until more are verified. BoschGroup resolves but is deliberately excluded:
-# 4,700+ postings would cost ~48 paginated requests every cycle.
 smartrecruiters:
-  - ServiceNow
-  - Experian
-  - Visa
-  - WesternDigital
-  - Ubisoft2
+  - AristaNetworks  # Arista Networks
+  - Continental
   - Devoteam
   - Equinox
+  - Experian
+  - HarvardUniversity  # Harvard University
   - McDonaldsCorporation
-  - Continental
+  - MyriadGenetics1  # Myriad Genetics
+  - NorthwesternMutual  # Northwestern Mutual
+  - Sandisk  # Sandisk
+  - ServiceNow
+  - Sportradar  # Sportradar
+  - TruvenHealthAnalyticsanIBMCompany  # Merative
+  - Ubisoft2
+  - Visa
+  - WellmarkInc  # Wellmark
+  - WesternDigital
+  - Wise  # Wise

@@ -57,7 +57,12 @@
 - `data/watchlist.yaml` + `scripts/seed_watchlist.py` (watchlist curation needs user input)
 - `.github/workflows/poll.yml` once pollers exist
 
+### Session 2b — 2026-07-19 — watchlist expansion (user-delegated homework)
+
+Expanded watchlist 55 → 335 verified boards (155 greenhouse / 30 lever / 132 ashby / 18 smartrecruiters). Sources: ATS tokens mined from the 1,918 SimplifyJobs job URLs already in the DB (433 unique, 480 verified incl. curated) + ~120 hand-curated sponsor-friendly companies probed against the ATS APIs. Curation drops applied: ITAR/defense/clearance companies (can't sponsor F-1→H-1B), staffing/consulting mills (SR extraction was ~80% these), non-US-only boards, non-tech, demo/duplicate artifacts; SR boards >600 postings excluded for pagination budget. Notable adds: Jane Street, DRW, Virtu, Five Rings, Marshall Wace, Optiver, Akuna, Point72, HRT + full quant cluster; Waymo, Reddit, Figma, Discord, Snowflake (ashby), PlayStation, NYT, Wiz, Perplexity, xAI, Scale AI. Ranked 3-tier report delivered to user. `shieldai` (seed) left in but flagged as defense. Remaining homework for user: Supabase + GitHub Actions setup (repo has no remote yet) — guide already provided in chat.
+
 ## Notes for future sessions
+- User feedback after first backfill (2026-07-19): notifications included many non-US postings (several watchlist boards are global — Ubisoft2, Devoteam, Continental, octoenergy, brillio-2) and were dominated by single companies. Add a US/remote-US location filter to notify_new_job (or to is_new_grad gating), and consider per-company caps / triage-score gating when §6 jd_score lands. Backfill artifact only for the same-company clustering; the location gap is real in steady state too.
 - Local runs don't auto-load `.env` — pollers read os.environ (DATABASE_URL falls back to the docker default; DISCORD_WEBHOOK/GH_PAT must be exported or injected). Consider a tiny env loader or `uv run --env-file` later.
 - Discord webhook is set in the user's `.env` and verified working (2026-07-19).
 - Lever/Ashby boards `plaid`, `kraken`, `voleon`, `deel` resolve but had 0 postings on 2026-07-19 — watchlist keeps them; `check_watchlist.py` only treats 0-postings as dead for SmartRecruiters.
