@@ -19,7 +19,7 @@ from jobops.ingest.common import (
     polite_client,
     upsert_company,
 )
-from jobops.notify.discord import notify_new_job
+from jobops.notify.discord import notify_new_jobs
 
 API = "https://boards-api.greenhouse.io/v1/boards/{token}/jobs"
 
@@ -65,20 +65,19 @@ def poll_board(token: str, client: httpx.Client) -> list[str]:
 def run() -> None:
     """Poll every watched Greenhouse board sequentially; one failure never kills the run."""
     tokens = load_watchlist().get("greenhouse", [])
-    new_total, failures = 0, 0
+    all_new: list[str] = []
+    failures = 0
     with polite_client() as client:
         for token in tokens:
             try:
-                new_ids = poll_board(token, client)
-                new_total += len(new_ids)
-                for jid in new_ids:
-                    notify_new_job(jid)
+                all_new += poll_board(token, client)
             except Exception as e:
                 failures += 1
                 print(f"[greenhouse:{token}] {e}")
+    notify_new_jobs(all_new)
     heartbeat("greenhouse", ok=failures == 0,
-              detail=f"{len(tokens) - failures}/{len(tokens)} boards, {new_total} new")
-    print(f"[greenhouse] done: {new_total} new, {failures} failed boards")
+              detail=f"{len(tokens) - failures}/{len(tokens)} boards, {len(all_new)} new")
+    print(f"[greenhouse] done: {len(all_new)} new, {failures} failed boards")
 
 
 if __name__ == "__main__":

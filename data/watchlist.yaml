@@ -1,0 +1,81 @@
+# watchlist.yaml — board tokens polled every cycle, keyed by ATS.
+#
+# Format:
+#   greenhouse:      [token, ...]   # boards.greenhouse.io/{token}
+#   lever:           [token, ...]   # jobs.lever.co/{token}
+#   ashby:           [token, ...]   # jobs.ashbyhq.com/{token}
+#   smartrecruiters: [token, ...]   # jobs.smartrecruiters.com/{token}  (case-sensitive)
+#
+# Finding a token: open the company's careers page and read it out of the URL
+# (boards.greenhouse.io/stripe -> stripe). Verify additions with
+#   uv run python scripts/check_watchlist.py
+# which flags dead/renamed boards (SmartRecruiters never 404s — zero postings
+# is the "dead token" signal there). Curate freely; pollers read this file on
+# every run, no restart needed.
+
+greenhouse:
+  - stripe
+  - databricks
+  - duolingo
+  - robinhood
+  - coinbase
+  - airbnb
+  - pinterest
+  - twilio
+  - doordashusa
+  - cloudflare
+  - mongodb
+  - datadog
+  - gitlab
+  - dropbox
+  - samsara
+  - affirm
+  - roblox
+  - anthropic
+
+lever:
+  - palantir
+  - plaid          # board live but 0 postings as of 2026-07 — keeping, costs one request
+  - spotify
+  - kraken         # board live but 0 postings as of 2026-07
+  - zoox
+  - voleon         # board live but 0 postings as of 2026-07
+  - matchgroup
+  - veeva
+  - octoenergy
+  - goodleap
+  - brillio-2
+  - shieldai
+
+ashby:
+  - ramp
+  - linear
+  - openai
+  - notion
+  - replit
+  - supabase
+  - posthog
+  - deel
+  - modal
+  - elevenlabs
+  - sierra
+  - cohere
+  - vanta
+  - clickhouse
+  - cursor
+  - docker
+
+# SmartRecruiters tokens are opaque (case-sensitive, often not the brand name)
+# and the API 200s with 0 postings for wrong guesses — this list is smaller
+# until more are verified. BoschGroup resolves but is deliberately excluded:
+# 4,700+ postings would cost ~48 paginated requests every cycle.
+smartrecruiters:
+  - ServiceNow
+  - Experian
+  - Visa
+  - WesternDigital
+  - Ubisoft2
+  - Devoteam
+  - Equinox
+  - McDonaldsCorporation
+  - Continental

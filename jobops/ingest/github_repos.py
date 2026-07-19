@@ -15,7 +15,7 @@ import httpx
 
 from jobops.db import get_conn, heartbeat
 from jobops.ingest.common import insert_job, polite_client, upsert_company
-from jobops.notify.discord import notify_new_job
+from jobops.notify.discord import notify_new_jobs
 
 REPOS = [
     ("SimplifyJobs", "New-Grad-Positions", "dev", ".github/scripts/listings.json"),
@@ -66,20 +66,19 @@ def run() -> None:
     headers = {}
     if tok := os.environ.get("GITHUB_TOKEN"):
         headers["Authorization"] = f"Bearer {tok}"
-    new_total, failures = 0, 0
+    all_new: list[str] = []
+    failures = 0
     with polite_client(headers=headers) as client:
         for owner, repo, branch, path in REPOS:
             try:
-                new_ids = poll_repo(owner, repo, branch, path, client)
-                new_total += len(new_ids)
-                for jid in new_ids:
-                    notify_new_job(jid)
+                all_new += poll_repo(owner, repo, branch, path, client)
             except Exception as e:
                 failures += 1
                 print(f"[github_repo:{owner}/{repo}] {e}")
+    notify_new_jobs(all_new)
     heartbeat("github_repos", ok=failures == 0,
-              detail=f"{len(REPOS) - failures}/{len(REPOS)} repos, {new_total} new")
-    print(f"[github_repo] done: {new_total} new, {failures} failed repos")
+              detail=f"{len(REPOS) - failures}/{len(REPOS)} repos, {len(all_new)} new")
+    print(f"[github_repo] done: {len(all_new)} new, {failures} failed repos")
 
 
 if __name__ == "__main__":

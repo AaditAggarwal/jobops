@@ -7,6 +7,7 @@ badge encodes the company's sponsor_status so a glance answers "worth it?".
 from __future__ import annotations
 
 import os
+import time
 
 import httpx
 
@@ -53,3 +54,23 @@ def notify_new_job(job_id: str) -> bool:
         print(f"[discord] notify failed: {e}")
         return False
     return True
+
+
+def notify_new_jobs(job_ids: list[str], cap: int = 15) -> int:
+    """Notify for a batch of new job ids, sending at most `cap` pings.
+
+    The cap exists for backfill runs (a first poll inserts a board's whole
+    history) — Discord webhooks throttle around 30 req/min, and a thousand
+    phone pings helps nobody. Steady-state cycles see far fewer than `cap`
+    new-grad postings. Returns the number actually sent.
+    """
+    sent = 0
+    for i, jid in enumerate(job_ids):
+        if sent >= cap:
+            print(f"[discord] cap reached ({cap}); "
+                  f"{len(job_ids) - i} remaining new jobs not checked")
+            break
+        if notify_new_job(jid):
+            sent += 1
+            time.sleep(0.5)  # stay far under the webhook rate limit
+    return sent

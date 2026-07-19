@@ -26,10 +26,11 @@ from jobops.ingest.common import (
     polite_client,
     upsert_company,
 )
-from jobops.notify.discord import notify_new_job
+from jobops.notify.discord import notify_new_jobs
 
 API = "https://api.smartrecruiters.com/v1/companies/{token}/postings"
 PAGE_SIZE = 100
+DETAIL_CAP = 40  # max detail fetches per board per run; protects backfill runs
 
 
 def map_posting(item: dict[str, Any], token: str) -> dict[str, Any]:
@@ -86,13 +87,19 @@ def poll_board(token: str, client: httpx.Client) -> list[str]:
     company_name = (items[0].get("company") or {}).get("name") or token
     with get_conn() as conn, conn.cursor() as cur:
         company_id = upsert_company(cur, company_name, "smartrecruiters", token)
-    new_ids = []
+    # newest first so the detail cap spends its budget on recent postings
+    items.sort(key=lambda i: i.get("releasedDate") or "", reverse=True)
+    new_ids: list[str] = []
+    details_fetched = 0
     for item in items:
         m = map_posting(item, token)
         jid = insert_job(source="smartrec", company_id=company_id, raw=item, **m)
         if not jid:
             continue
         new_ids.append(jid)
+        if details_fetched >= DETAIL_CAP:
+            continue  # backfill run: leave description NULL rather than hammer the API
+        details_fetched += 1
         try:
             r = get_with_backoff(client, API.format(token=token) + f"/{item['id']}")
             r.raise_for_status()
@@ -112,20 +119,19 @@ def poll_board(token: str, client: httpx.Client) -> list[str]:
 def run() -> None:
     """Poll every watched SmartRecruiters company; one failure never kills the run."""
     tokens = load_watchlist().get("smartrecruiters", [])
-    new_total, failures = 0, 0
+    all_new: list[str] = []
+    failures = 0
     with polite_client() as client:
         for token in tokens:
             try:
-                new_ids = poll_board(token, client)
-                new_total += len(new_ids)
-                for jid in new_ids:
-                    notify_new_job(jid)
+                all_new += poll_board(token, client)
             except Exception as e:
                 failures += 1
                 print(f"[smartrec:{token}] {e}")
+    notify_new_jobs(all_new)
     heartbeat("smartrecruiters", ok=failures == 0,
-              detail=f"{len(tokens) - failures}/{len(tokens)} boards, {new_total} new")
-    print(f"[smartrec] done: {new_total} new, {failures} failed boards")
+              detail=f"{len(tokens) - failures}/{len(tokens)} boards, {len(all_new)} new")
+    print(f"[smartrec] done: {len(all_new)} new, {failures} failed boards")
 
 
 if __name__ == "__main__":
