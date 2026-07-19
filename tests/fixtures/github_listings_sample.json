@@ -1,0 +1,105 @@
+[
+ {
+  "source": "Simplify",
+  "category": "Product",
+  "company_name": "TheGuarantors",
+  "id": "19f79bc4-c14b-46f6-8df6-0223d27ed872",
+  "title": "Product Manager",
+  "active": true,
+  "date_updated": 1784327651,
+  "date_posted": 1784326338,
+  "url": "https://ats.rippling.com/theguarantors-open-positions/jobs/40594c89-8739-4809-ba63-e20f0ea5e735",
+  "locations": [
+   "NYC"
+  ],
+  "company_url": "https://simplify.jobs/c/TheGuarantors",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": []
+ },
+ {
+  "source": "Simplify",
+  "category": "AI/ML/Data",
+  "company_name": "Axle",
+  "id": "fc9bdda8-0104-4f86-ad16-8e42683b6444",
+  "title": "Data Science Fellow",
+  "active": true,
+  "date_updated": 1784327045,
+  "date_posted": 1780956479,
+  "url": "https://job-boards.greenhouse.io/axle/jobs/5158529007",
+  "locations": [
+   "Remote in USA"
+  ],
+  "company_url": "https://simplify.jobs/c/2fb4f27c-8f47-47fe-a3ad-4b033c6586da",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "PhD"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "Magnatech",
+  "id": "ddfdefdf-b2dc-4658-94dd-c253366dcb36",
+  "title": "Associate Developer",
+  "active": true,
+  "date_updated": 1784332621,
+  "date_posted": 1784327346,
+  "url": "https://magnatech.io/technology-careers/?gh_jid=4716011005",
+  "locations": [
+   "Remote in USA"
+  ],
+  "company_url": "https://simplify.jobs/c/35e7665a-031b-42a7-9468-691a1c0d35dc",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's",
+   "Bootcamp",
+   "Certificate"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "SpaceX",
+  "id": "b9eb627c-cc95-42eb-a6d2-f2b33c57b4af",
+  "title": "Full Stack Software Engineer Observability - Observability - Starlink",
+  "active": true,
+  "date_updated": 1784332329,
+  "date_posted": 1784326460,
+  "url": "https://boards.greenhouse.io/spacex/jobs/8638457002",
+  "locations": [
+   "West Athens, CA"
+  ],
+  "company_url": "https://simplify.jobs/c/SpaceX",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "AI/ML/Data",
+  "company_name": "Citadel",
+  "id": "1d1d2782-d1f8-47e7-980c-9f71c9a591cf",
+  "title": "Machine Learning Researcher – PhD Graduate",
+  "active": true,
+  "date_updated": 1784337481,
+  "date_posted": 1784336953,
+  "url": "https://www.citadel.com/careers/details/machine-learning-researcher-phd-graduate-us/",
+  "locations": [
+   "Greenwich, CT",
+   "Houston, TX",
+   "Miami, FL",
+   "NYC"
+  ],
+  "company_url": "https://simplify.jobs/c/Citadel",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "PhD"
+  ]
+ }
+]

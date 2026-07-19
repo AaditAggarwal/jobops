@@ -10,15 +10,27 @@ from __future__ import annotations
 import re
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import httpx
 import psycopg
+import yaml
 from psycopg.types.json import Jsonb
 
 from jobops.db import get_conn
 
 USER_AGENT = "jobops/1.0 (personal job tracker)"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+WATCHLIST_PATH = REPO_ROOT / "data" / "watchlist.yaml"
+
+
+def load_watchlist() -> dict[str, list[str]]:
+    """Load data/watchlist.yaml as {ats: [token, ...]}; missing file -> {}."""
+    if not WATCHLIST_PATH.exists():
+        print(f"[watchlist] {WATCHLIST_PATH} not found")
+        return {}
+    return yaml.safe_load(WATCHLIST_PATH.read_text(encoding="utf-8")) or {}
 
 NEW_GRAD_PAT = re.compile(
     r"\b(new ?grad(uate)?|university grad(uate)?|entry.?level|early career|campus|"

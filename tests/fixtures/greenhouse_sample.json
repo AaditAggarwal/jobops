@@ -1,0 +1,234 @@
+{
+ "jobs": [
+  {
+   "absolute_url": "https://careers.duolingo.com/jobs/8621586002?gh_jid=8621586002",
+   "data_compliance": [
+    {
+     "type": "gdpr",
+     "requires_consent": false,
+     "requires_processing_consent": false,
+     "requires_retention_consent": false,
+     "retention_period": null,
+     "demographic_data_consent_applies": false
+    }
+   ],
+   "internal_job_id": 6443082002,
+   "location": {
+    "name": "Pittsburgh, PA"
+   },
+   "metadata": [
+    {
+     "id": 10945305002,
+     "name": "Division",
+     "value": "Marketing and Communications",
+     "value_type": "single_select"
+    },
+    {
+     "id": 9700632002,
+     "name": "Req Type",
+     "value": "Industry",
+     "value_type": "single_select"
+    },
+    {
+     "id": 98443292002,
+     "name": "Featured Title",
+     "value": null,
+     "value_type": "short_text"
+    },
+    {
+     "id": 98445720002,
+     "name": "Featured City Name",
+     "value": null,
+     "value_type": "single_select"
+    }
+   ],
+   "id": 8621586002,
+   "updated_at": "2026-07-06T16:06:19-04:00",
+   "requisition_id": "R-01173",
+   "title": "Brand Campaigns Director",
+   "company_name": "Duolingo",
+   "first_published": "2026-07-06T16:06:19-04:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;p&gt;Our mission at Duolingo is to develop the best education in the world and make it universally available. It’s a big mission, and that’s where you come in!&lt;/p&gt;\n&lt;p&gt;At Duolingo, you’ll join a team that cares about educating our users, experimenting with big ideas, making fact-based decisions, and finding innovative solutions to complex problems. You’ll have limitless learning opportunities and daily collaborations with world-class minds — while doing work that’s both meaningful and fun.&lt;/p&gt;\n&lt;p&gt;Join our life-changing mission to develop education for our half a bill…",
+   "departments": [
+    {
+     "id": 4034087002,
+     "name": "Marketing and Communications",
+     "child_ids": [
+      4034820002
+     ],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4017774002,
+     "name": "New York, NY",
+     "location": "New York, New York, United States",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "ai_disclaimer": "<p><strong style=\"font-size: 14px;\">AI in Hiring: </strong><span style=\"font-size: 14px;\">Duolingo uses AI technology to assist in our hiring process. We want to be transparent about how we use this technology and your rights. We use Greenhouse Software's Talent Matching feature to assist with reviewing applications for the skills and experience we have decided are important for this role.</span></p><p><br></p><p><strong style=\"font-size: 14px;\">How it works:</strong><span style=\"font-size: 14px;\"> </span></p><ol><li data-list=\"bullet\"><span class=\"ql-ui\"></span>Talent Matching reviews your resume and responses to application questions to determine the extent to which your qualifications match the job requirements selected for this role. These requirements and their desired weighting are established by our recruiters in collaboration with hiring managers.</li><li data-list=\"bullet\"><span class=\"ql-ui\"></span>All Talent Matching output is reviewed by our recruiting and hiring teams, who make the final decision on each application. Talent Matching does not automatically disposition any candidate or make hiring decisions.</li></ol>",
+   "include_ai_disclaimer": true,
+   "ai_opt_out_request_url": "http://app2.greenhouse.io/ai_opt_out_request/job_post/8621586002/ai_opt_out"
+  },
+  {
+   "absolute_url": "https://careers.duolingo.com/jobs/8621574002?gh_jid=8621574002",
+   "data_compliance": [
+    {
+     "type": "gdpr",
+     "requires_consent": false,
+     "requires_processing_consent": false,
+     "requires_retention_consent": false,
+     "retention_period": null,
+     "demographic_data_consent_applies": false
+    }
+   ],
+   "internal_job_id": 6443082002,
+   "location": {
+    "name": "New York, NY"
+   },
+   "metadata": [
+    {
+     "id": 10945305002,
+     "name": "Division",
+     "value": "Marketing and Communications",
+     "value_type": "single_select"
+    },
+    {
+     "id": 9700632002,
+     "name": "Req Type",
+     "value": "Industry",
+     "value_type": "single_select"
+    },
+    {
+     "id": 98443292002,
+     "name": "Featured Title",
+     "value": null,
+     "value_type": "short_text"
+    },
+    {
+     "id": 98445720002,
+     "name": "Featured City Name",
+     "value": null,
+     "value_type": "single_select"
+    }
+   ],
+   "id": 8621574002,
+   "updated_at": "2026-07-06T16:06:18-04:00",
+   "requisition_id": "R-01173",
+   "title": "Brand Campaigns Director",
+   "company_name": "Duolingo",
+   "first_published": "2026-07-06T16:06:18-04:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;p&gt;Our mission at Duolingo is to develop the best education in the world and make it universally available. It’s a big mission, and that’s where you come in!&lt;/p&gt;\n&lt;p&gt;At Duolingo, you’ll join a team that cares about educating our users, experimenting with big ideas, making fact-based decisions, and finding innovative solutions to complex problems. You’ll have limitless learning opportunities and daily collaborations with world-class minds — while doing work that’s both meaningful and fun.&lt;/p&gt;\n&lt;p&gt;Join our life-changing mission to develop education for our half a bill…",
+   "departments": [
+    {
+     "id": 4034087002,
+     "name": "Marketing and Communications",
+     "child_ids": [
+      4034820002
+     ],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4017774002,
+     "name": "New York, NY",
+     "location": "New York, New York, United States",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "ai_disclaimer": "<p><strong style=\"font-size: 14px;\">AI in Hiring: </strong><span style=\"font-size: 14px;\">Duolingo uses AI technology to assist in our hiring process. We want to be transparent about how we use this technology and your rights. We use Greenhouse Software's Talent Matching feature to assist with reviewing applications for the skills and experience we have decided are important for this role.</span></p><p><br></p><p><strong style=\"font-size: 14px;\">How it works:</strong><span style=\"font-size: 14px;\"> </span></p><ol><li data-list=\"bullet\"><span class=\"ql-ui\"></span>Talent Matching reviews your resume and responses to application questions to determine the extent to which your qualifications match the job requirements selected for this role. These requirements and their desired weighting are established by our recruiters in collaboration with hiring managers.</li><li data-list=\"bullet\"><span class=\"ql-ui\"></span>All Talent Matching output is reviewed by our recruiting and hiring teams, who make the final decision on each application. Talent Matching does not automatically disposition any candidate or make hiring decisions.</li></ol>",
+   "include_ai_disclaimer": true,
+   "ai_opt_out_request_url": "http://app2.greenhouse.io/ai_opt_out_request/job_post/8621574002/ai_opt_out"
+  },
+  {
+   "absolute_url": "https://careers.duolingo.com/jobs/8576434002?gh_jid=8576434002",
+   "data_compliance": [
+    {
+     "type": "gdpr",
+     "requires_consent": false,
+     "requires_processing_consent": false,
+     "requires_retention_consent": false,
+     "retention_period": null,
+     "demographic_data_consent_applies": false
+    }
+   ],
+   "internal_job_id": 6425691002,
+   "location": {
+    "name": "Pittsburgh, PA"
+   },
+   "metadata": [
+    {
+     "id": 10945305002,
+     "name": "Division",
+     "value": "Legal",
+     "value_type": "single_select"
+    },
+    {
+     "id": 9700632002,
+     "name": "Req Type",
+     "value": "Industry",
+     "value_type": "single_select"
+    },
+    {
+     "id": 98443292002,
+     "name": "Featured Title",
+     "value": null,
+     "value_type": "short_text"
+    },
+    {
+     "id": 98445720002,
+     "name": "Featured City Name",
+     "value": null,
+     "value_type": "single_select"
+    }
+   ],
+   "id": 8576434002,
+   "updated_at": "2026-07-06T13:46:25-04:00",
+   "requisition_id": "R-01156",
+   "title": "Corporate Counsel",
+   "company_name": "Duolingo",
+   "first_published": "2026-06-03T09:39:17-04:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;p&gt;Our mission at Duolingo is to develop the best education in the world and make it universally available. It’s a big mission, and that’s where you come in!&lt;/p&gt;\n&lt;p&gt;At Duolingo, you’ll join a team that cares about educating our users, experimenting with big ideas, making fact-based decisions, and finding innovative solutions to complex problems. You’ll have limitless learning opportunities and daily collaborations with world-class minds — while doing work that’s both meaningful and fun.&lt;/p&gt;\n&lt;p&gt;Join our life-changing mission to develop education for our half a bill…",
+   "departments": [
+    {
+     "id": 4034091002,
+     "name": "Legal",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4017774002,
+     "name": "New York, NY",
+     "location": "New York, New York, United States",
+     "child_ids": [],
+     "parent_id": null
+    },
+    {
+     "id": 4017771002,
+     "name": "Pittsburgh, PA",
+     "location": "Pittsburgh, Pennsylvania, United States",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "ai_disclaimer": "<p><strong style=\"font-size: 14px;\">AI in Hiring: </strong><span style=\"font-size: 14px;\">Duolingo uses AI technology to assist in our hiring process. We want to be transparent about how we use this technology and your rights. We use Greenhouse Software's Talent Matching feature to assist with reviewing applications for the skills and experience we have decided are important for this role.</span></p><p><br></p><p><strong style=\"font-size: 14px;\">How it works:</strong><span style=\"font-size: 14px;\"> </span></p><ol><li data-list=\"bullet\"><span class=\"ql-ui\"></span>Talent Matching reviews your resume and responses to application questions to determine the extent to which your qualifications match the job requirements selected for this role. These requirements and their desired weighting are established by our recruiters in collaboration with hiring managers.</li><li data-list=\"bullet\"><span class=\"ql-ui\"></span>All Talent Matching output is reviewed by our recruiting and hiring teams, who make the final decision on each application. Talent Matching does not automatically disposition any candidate or make hiring decisions.</li></ol>",
+   "include_ai_disclaimer": true,
+   "ai_opt_out_request_url": "http://app2.greenhouse.io/ai_opt_out_request/job_post/8576434002/ai_opt_out"
+  }
+ ],
+ "meta": {
+  "total": 63
+ }
+}

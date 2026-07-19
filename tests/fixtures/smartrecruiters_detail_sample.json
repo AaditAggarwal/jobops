@@ -1,0 +1,129 @@
+{
+ "id": "744000138497339",
+ "name": "Sr Product Security Engineer",
+ "uuid": "03330ac6-0467-461d-804e-712202629ef3",
+ "jobId": "ae404d2d-1dd0-436d-93b6-808a300c0bd2",
+ "jobAdId": "28a80025-be8f-421b-af43-d4f6e80c656c",
+ "defaultJobAd": true,
+ "refNumber": "JB0073193",
+ "company": {
+  "name": "ServiceNow",
+  "identifier": "ServiceNow"
+ },
+ "location": {
+  "city": "Petah Tikva",
+  "country": "il",
+  "address": "Hamerton House 18-20 Aharon Bart St., Bldg. B 3rd Floor",
+  "postalCode": "4951448",
+  "remote": false,
+  "hybrid": true,
+  "fullLocation": "Petah Tikva, , Israel"
+ },
+ "customField": [
+  {
+   "fieldId": "60345fa28b4ba8595bef1863",
+   "fieldLabel": "Recruiting Team",
+   "valueId": "professional",
+   "valueLabel": "Professional"
+  },
+  {
+   "fieldId": "60345e1a0b24a127cbdfa148",
+   "fieldLabel": "Employee Type",
+   "valueId": "0082f6cbe6154da19322cbab1f6aa5af",
+   "valueLabel": "Regular"
+  },
+  {
+   "fieldId": "COUNTRY",
+   "fieldLabel": "Country/Region",
+   "valueId": "il",
+   "valueLabel": "Israel"
+  },
+  {
+   "fieldId": "5f63a78f1dae5c5c4e54ba2a",
+   "fieldLabel": "Brands",
+   "valueId": "default",
+   "valueLabel": "ServiceNow"
+  },
+  {
+   "fieldId": "60345d5c5165a31b17288279",
+   "fieldLabel": "Region",
+   "valueId": "395ee3093de740ba9cb8b3d35cb67e2d",
+   "valueLabel": "EMEA - Europe, Middle East and Africa"
+  },
+  {
+   "fieldId": "603462175165a31b1728827d",
+   "fieldLabel": "Cost Center",
+   "valueId": "CC1100",
+   "valueLabel": "1100 Security"
+  },
+  {
+   "fieldId": "6034601b43915a29a4b3389b",
+   "fieldLabel": "Job Location",
+   "valueId": "L_TLV001",
+   "valueLabel": "18-20 Aharon Bart St., Bldg. B, Petah Tikva, 4951448, Israel(L_TLV001)"
+  },
+  {
+   "fieldId": "618ed92b8f5e5f110e5bfb95",
+   "fieldLabel": "Work Persona",
+   "valueId": "bf7551c6-9b06-4e7c-8217-3baf43edd060",
+   "valueLabel": "Flexible"
+  },
+  {
+   "fieldId": "690cc0e8c682c3dbadaa7d73",
+   "fieldLabel": "Job Posting Type",
+   "valueId": "professional",
+   "valueLabel": "Professional"
+  }
+ ],
+ "releasedDate": "2026-07-19T10:16:34.476Z",
+ "creator": {
+  "name": "",
+  "avatarUrl": ""
+ },
+ "postingUrl": "https://jobs.smartrecruiters.com/ServiceNow/744000138497339-sr-product-security-engineer",
+ "applyUrl": "https://jobs.smartrecruiters.com/ServiceNow/744000138497339-sr-product-security-engineer?oga=true",
+ "referralUrl": "https://jobs.smartrecruiters.com/external-referrals/company/ServiceNow/publication/03330ac6-0467-461d-804e-712202629ef3?dcr_ci=ServiceNow",
+ "jobAd": {
+  "sections": {
+   "companyDescription": {
+    "title": "Company Description",
+    "text": "<p>It all started when engineer Fred Luddy wrote code that automated a tedious task for his coworker, Phyllis. She cried tears of joy. That moment inspired Fred to build a company that could do that for everyone—freeing people from busywork so they could focus on meaningful work. Today, ServiceNow is the AI control tower for business reinvention. Our ServiceNow AI platform brings together any AI, any data, and any workflow— helping 85% of the Fortune 500® work smarter, faster, and better. We're building an AI-native culture where technology and talent are unstoppable together. And we're just g"
+   },
+   "jobDescription": {
+    "title": "Job Description",
+    "text": "<p>&#xa0;</p><p><strong>What you get to do in this role:</strong></p><p>ServiceNow’s Product Security organisation is building a dedicated Security R&amp;D function — a software engineering team that builds security capabilities with the same engineering standards as ServiceNow’s product organisation. We are looking for a Senior Security Engineer to join this team as a core builder.</p><p>Security R&amp;D operates in two complementary modes:&#xa0;<strong>open contribution to product engineering</strong>&#xa0;— writing code alongside product teams where security expertise adds value — and&#xa0;"
+   },
+   "qualifications": {
+    "title": "Qualifications",
+    "text": "<p><strong>To be successful in this role, you have:</strong></p><ul><li>5+ years of professional software engineering experience building production systems.</li><li>Bachelor’s degree in Computer Science, Engineering, or a related technical field.</li><li>Strong hands-on proficiency in Python and Java. You are a software engineer first — writing production code is what you do.</li><li>Solid understanding of software engineering fundamentals: data structures, algorithms, system design, testing, and CI/CD practices.</li><li>Experience building services or applications in cloud environments with "
+   },
+   "additionalInformation": {
+    "title": "Additional Information",
+    "text": "<p><strong>Work Personas</strong></p><p>We approach our distributed world of work with flexibility and trust. Work personas (flexible, remote, or required in office) are categories that are assigned to ServiceNow employees depending on the nature of their work and their assigned work location. <a href=\"https://careers.servicenow.com/life-at-servicenow#workpersonas\" rel=\"noopener noreferrer\"><u>Learn more here</u></a>. To determine eligibility for a work persona, ServiceNow may confirm the distance between your primary residence and the closest ServiceNow office using a third-party service.</p>"
+   }
+  }
+ },
+ "active": true,
+ "visibility": "PUBLIC",
+ "industry": {
+  "id": "it_and_services",
+  "label": "Information Technology And Services"
+ },
+ "function": {
+  "id": "engineering",
+  "label": "Engineering"
+ },
+ "experienceLevel": {
+  "id": "not_applicable",
+  "label": "Not Applicable"
+ },
+ "typeOfEmployment": {
+  "id": "permanent",
+  "label": "Full-time"
+ },
+ "language": {
+  "code": "en",
+  "label": "English",
+  "labelNative": "English (US)"
+ }
+}
