@@ -122,12 +122,14 @@ def run() -> None:
     all_new: list[str] = []
     failures = 0
     with polite_client() as client:
-        for token in tokens:
+        for i, token in enumerate(tokens, 1):
             try:
                 all_new += poll_board(token, client)
             except Exception as e:
                 failures += 1
                 print(f"[smartrec:{token}] {e}")
+            if i % 5 == 0:
+                print(f"[smartrec] {i}/{len(tokens)} boards, {len(all_new)} new so far")
     notify_new_jobs(all_new)
     heartbeat("smartrecruiters", ok=failures == 0,
               detail=f"{len(tokens) - failures}/{len(tokens)} boards, {len(all_new)} new")
