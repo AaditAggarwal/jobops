@@ -1,7 +1,13 @@
 """Greenhouse board poller.
 
-GET https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true
-One request per watched board per run. See DESIGN.md §4.3.
+GET https://boards-api.greenhouse.io/v1/boards/{token}/jobs        (light list)
+GET https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{id}   (detail)
+
+List-then-detail: the ?content=true list is multi-MB per board (full JD HTML
+for every posting), which made runs crawl on throttled CI runner IPs. The
+light list is a few KB; the detail endpoint is hit only for NEWLY inserted
+jobs (capped per run), so request volume tracks new postings, not board size.
+Same pattern as smartrecruiters.py. See DESIGN.md §4.3.
 """
 
 from __future__ import annotations
@@ -12,17 +18,19 @@ from typing import Any
 
 import httpx
 
-from jobops.db import get_conn, heartbeat
+from jobops.db import execute, get_conn, heartbeat
 from jobops.ingest.common import (
     get_with_backoff,
     insert_job,
     load_watchlist,
+    looks_new_grad,
     polite_client,
     upsert_company,
 )
 from jobops.notify.discord import notify_new_jobs
 
 API = "https://boards-api.greenhouse.io/v1/boards/{token}/jobs"
+DETAIL_CAP = 25  # max detail fetches per board per run; protects backfill runs
 
 
 def map_posting(j: dict[str, Any]) -> dict[str, Any]:
@@ -43,24 +51,40 @@ def map_posting(j: dict[str, Any]) -> dict[str, Any]:
 
 
 def poll_board(token: str, client: httpx.Client) -> list[str]:
-    """Poll one board token; returns ids of newly inserted jobs."""
-    r = get_with_backoff(client, API.format(token=token), params={"content": "true"})
+    """Poll one board token (light list); returns ids of newly inserted jobs.
+
+    New jobs get a follow-up detail fetch (capped) to fill description and
+    recompute is_new_grad from the JD before notifications read the row.
+    """
+    r = get_with_backoff(client, API.format(token=token))
     if r.status_code == 404:  # board renamed/removed — check_watchlist will flag it
         print(f"[greenhouse:{token}] 404 board not found")
         return []
     r.raise_for_status()
     data = r.json()
     jobs = data.get("jobs", [])
-    company_name = jobs[0]["company_name"] if jobs else token
+    company_name = (jobs[0].get("company_name") if jobs else None) or token
     with get_conn() as conn, conn.cursor() as cur:
         company_id = upsert_company(cur, company_name, "greenhouse", token)
-    new_ids = []
+    new: list[tuple[str, dict[str, Any]]] = []  # (job_id, mapped fields)
     for j in jobs:
         m = map_posting(j)
         jid = insert_job(source="greenhouse", company_id=company_id, raw=j, **m)
         if jid:
-            new_ids.append(jid)
-    return new_ids
+            new.append((jid, m))
+    for jid, m in new[:DETAIL_CAP]:
+        try:
+            r = get_with_backoff(client, API.format(token=token) + f"/{m['external_id']}")
+            r.raise_for_status()
+            content = r.json().get("content")
+            if content:
+                execute(
+                    "UPDATE jobs SET description = %s, is_new_grad = %s WHERE id = %s",
+                    (content, looks_new_grad(m["title"], content), jid),
+                )
+        except Exception as e:  # detail is best-effort; the row already exists
+            print(f"[greenhouse:{token}] detail {m['external_id']}: {e}")
+    return [jid for jid, _ in new]
 
 
 def run() -> None:

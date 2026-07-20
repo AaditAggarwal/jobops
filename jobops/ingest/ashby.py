@@ -44,9 +44,7 @@ def map_posting(j: dict[str, Any]) -> dict[str, Any]:
 
 def poll_board(token: str, client: httpx.Client) -> list[str]:
     """Poll one Ashby token; returns ids of newly inserted jobs."""
-    r = get_with_backoff(
-        client, API.format(token=token), params={"includeCompensation": "true"}
-    )
+    r = get_with_backoff(client, API.format(token=token))  # no compensation: smaller payload
     if r.status_code == 404:
         print(f"[ashby:{token}] 404 board not found")
         return []
