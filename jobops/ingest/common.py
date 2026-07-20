@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import re
 import time
+import zlib
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,24 @@ def load_watchlist() -> dict[str, list[str]]:
         print(f"[watchlist] {WATCHLIST_PATH} not found")
         return {}
     return yaml.safe_load(WATCHLIST_PATH.read_text(encoding="utf-8")) or {}
+
+
+def shard_tokens(tokens: list[str]) -> list[str]:
+    """Filter tokens to this process's shard per JOBOPS_SHARD ("i/n"), if set.
+
+    Big providers are split across parallel CI jobs as disjoint SEQUENTIAL
+    streams (user-approved 2026-07-20 amendment to the polite-client rule:
+    at most 2 streams per provider, never the same board twice). The hash is
+    crc32, not hash() — Python randomizes hash() per process, which would
+    break the disjoint/complete guarantee across jobs.
+    """
+    spec = os.environ.get("JOBOPS_SHARD")
+    if not spec:
+        return tokens
+    idx, count = (int(x) for x in spec.split("/"))
+    mine = [t for t in tokens if zlib.crc32(t.lower().encode()) % count == idx]
+    print(f"[shard {spec}] {len(mine)}/{len(tokens)} boards")
+    return mine
 
 NEW_GRAD_PAT = re.compile(
     r"\b(new ?grad(uate)?|university grad(uate)?|entry.?level|early career|campus|"

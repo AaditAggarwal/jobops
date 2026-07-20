@@ -41,9 +41,12 @@ every session, update it at the end of every session.
   bullets from data/master_resume.yaml. A validator must reject rewrites that
   introduce numbers/technologies/claims absent from the source bullet. This
   validator is load-bearing; never weaken it.
-- **Be a polite API client:** sequential polling, honest User-Agent
+- **Be a polite API client:** sequential polling (amended 2026-07-20 with user
+  approval: at most 2 parallel sequential streams per provider over DISJOINT
+  board sets — CI runner IPs are tarpitted and one stream can't finish a
+  cycle; never poll the same board concurrently), honest User-Agent
   ("jobops/1.0 (personal job tracker)"), respect 429/5xx with backoff, ~1 request
-  per board per 10-minute cycle.
+  per board per poll cycle.
 
 ## Tech stack (fixed — do not substitute without asking)
 

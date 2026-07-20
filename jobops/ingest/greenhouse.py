@@ -25,6 +25,7 @@ from jobops.ingest.common import (
     load_watchlist,
     looks_new_grad,
     polite_client,
+    shard_tokens,
     upsert_company,
 )
 from jobops.notify.discord import notify_new_jobs
@@ -89,7 +90,7 @@ def poll_board(token: str, client: httpx.Client) -> list[str]:
 
 def run() -> None:
     """Poll every watched Greenhouse board sequentially; one failure never kills the run."""
-    tokens = load_watchlist().get("greenhouse", [])
+    tokens = shard_tokens(load_watchlist().get("greenhouse", []))
     all_new: list[str] = []
     failures = 0
     t0 = time.monotonic()

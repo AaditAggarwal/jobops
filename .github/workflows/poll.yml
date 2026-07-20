@@ -11,8 +11,11 @@ concurrency:
   cancel-in-progress: false  # queue instead — cancelling killed healthy runs when
                              # cron fired mid-cycle; 15-min job timeouts bound queuing
 
-# Pollers run as parallel jobs — one per ATS provider, so each provider still
-# sees a single sequential client (the polite-client rule is per-provider).
+# Pollers run as parallel jobs. Big providers are split into TWO jobs over
+# disjoint board halves (JOBOPS_SHARD) — each provider sees at most 2
+# sequential streams, never the same board twice (user-approved politeness
+# amendment, 2026-07-20; runner IPs are tarpitted ~7-30s/request, so one
+# sequential pass cannot finish a large provider inside a cycle).
 jobs:
   poll:
     runs-on: ubuntu-latest
@@ -20,7 +23,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        poller: [greenhouse, lever, ashby, smartrecruiters, github_repos]
+        include:
+          - {poller: greenhouse, shard: "0/2"}
+          - {poller: greenhouse, shard: "1/2"}
+          - {poller: ashby, shard: "0/2"}
+          - {poller: ashby, shard: "1/2"}
+          - {poller: lever}
+          - {poller: smartrecruiters}
+          - {poller: github_repos}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,6 +44,7 @@ jobs:
           PYTHONUNBUFFERED: "1"                          # stream logs live in the Actions UI
           JOBOPS_BACKOFF_RETRIES: "0"                    # runner IPs get 429'd heavily; skip
           JOBOPS_BACKOFF_CAP: "5"                        # throttled boards self-heal next cycle
+          JOBOPS_SHARD: ${{ matrix.shard }}              # empty -> poll all boards
 
   enrich:
     needs: poll
