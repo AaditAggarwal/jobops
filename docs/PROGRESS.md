@@ -82,6 +82,13 @@ Built `migrations/003_sponsors.sql` (§5.2 schema; 003 because 002 was taken by 
 
 Cloud diagnosis final: ATS APIs tarpit GitHub runner IPs (~7-30s/request regardless of payload; lever = 30s/board with zero failures), so greenhouse/ashby couldn't finish a sequential pass inside the 15-min job timeout. User chose 2-way sharding over alternate-cycles/trimming (AskUserQuestion). `shard_tokens()` in ingest/common.py filters by `JOBOPS_SHARD="i/n"` env using crc32 (NOT hash() — randomized per process, would break disjointness across CI jobs); workflow matrix runs greenhouse+ashby as 2 jobs each over disjoint halves. CLAUDE.md polite-client rule amended in place (user-approved): max 2 parallel sequential streams per provider, disjoint boards, never the same board concurrently. Tests assert the disjoint/complete/stable partition guarantee.
 
+## Exact next steps (for the next session)
+
+1. **User action first:** download USCIS H-1B Employer Data Hub CSVs (FY2022+) from uscis.gov ("H-1B Employer Data Hub Files" page — browser only, site 403s scripts) into `data/uscis/`.
+2. Then: `uv run python -m jobops.etl.uscis_hub` followed by `uv run python -m jobops.enrich.sponsor_match` (both already built, tested, and wired into the cycle) — this lights up 🟢/🟡 badges on notifications.
+3. Remaining Phase 5 item: DOL LCA ETL (`jobops/etl/dol_lca.py`) — needs `openpyxl` (not in fixed stack; ask user) and the quarterly disclosure files; USCIS alone drives the current score.
+4. Then per DESIGN.md roadmap: §6 JD enrichment (LLM fit scoring via jobops/llm.py), §13 dashboard, or §7 resume automation — user will scope via session prompt.
+
 ## Notes for future sessions
 - Notification semantics gap: pings fire at the end of each poller's run(), so a killed/cancelled run inserts jobs that never notify (observed 2026-07-19: 99 new-grad roles silent after Actions timeout kills). Consider a `notified_at` column on jobs so notification becomes a resumable step instead of an in-memory afterthought.
 - Classifier noise: looks_new_grad's JD fallback flags non-tech roles (Harvard "Faculty Administrative Assistant" etc. via "entry level"/"early career" appearing in JD text). Tighten: only apply the JD fallback when the title looks technical, and add the US-location notification filter noted above.
