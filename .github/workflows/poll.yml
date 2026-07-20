@@ -7,8 +7,9 @@ on:
     paths-ignore: ["docs/**", "*.md"]  # safe: concurrency-guarded + idempotent
 
 concurrency:
-  group: poll-jobs          # never poll from two workflow runs at once;
-  cancel-in-progress: true  # a new run supersedes a stale one (idempotent inserts)
+  group: poll-jobs           # never poll from two workflow runs at once;
+  cancel-in-progress: false  # queue instead — cancelling killed healthy runs when
+                             # cron fired mid-cycle; 15-min job timeouts bound queuing
 
 # Pollers run as parallel jobs — one per ATS provider, so each provider still
 # sees a single sequential client (the polite-client rule is per-provider).
