@@ -1,6 +1,6 @@
 name: poll-jobs
 on:
-  schedule: [{cron: "*/20 * * * *"}]   # every 20 min (Actions may add jitter; fine)
+  schedule: [{cron: "*/30 * * * *"}]   # every 30 min (user-approved cadence; jitter fine)
   workflow_dispatch:
   push:
     branches: [main]                   # smoke-test every change immediately;
