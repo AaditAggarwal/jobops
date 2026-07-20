@@ -19,7 +19,7 @@ concurrency:
 jobs:
   poll:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 28   # slow-IP draws hit ~30s/board; cycle is 30 min
     strategy:
       fail-fast: false
       matrix:

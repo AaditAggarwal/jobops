@@ -78,7 +78,7 @@ def run() -> None:
             except Exception as e:
                 failures += 1
                 print(f"[github_repo:{owner}/{repo}] {e}")
-    notify_new_jobs(all_new)
+    notify_new_jobs(all_new)  # single request per repo; per-board split n/a
     heartbeat("github_repos", ok=failures == 0,
               detail=f"{len(REPOS) - failures}/{len(REPOS)} repos, "
                      f"{len(all_new)} new, {time.monotonic() - t0:.0f}s")

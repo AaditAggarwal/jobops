@@ -56,7 +56,10 @@ def notify_new_job(job_id: str) -> bool:
     return True
 
 
-def notify_new_jobs(job_ids: list[str], cap: int = 15) -> int:
+NOTIFY_CAP = 15  # max pings per poller run (backfills; Discord throttles ~30/min)
+
+
+def notify_new_jobs(job_ids: list[str], cap: int = NOTIFY_CAP) -> int:
     """Notify for a batch of new job ids, sending at most `cap` pings.
 
     The cap exists for backfill runs (a first poll inserts a board's whole
@@ -64,6 +67,8 @@ def notify_new_jobs(job_ids: list[str], cap: int = 15) -> int:
     phone pings helps nobody. Steady-state cycles see far fewer than `cap`
     new-grad postings. Returns the number actually sent.
     """
+    if cap <= 0:
+        return 0
     sent = 0
     for i, jid in enumerate(job_ids):
         if sent >= cap:

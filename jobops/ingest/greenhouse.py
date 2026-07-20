@@ -28,7 +28,7 @@ from jobops.ingest.common import (
     shard_tokens,
     upsert_company,
 )
-from jobops.notify.discord import notify_new_jobs
+from jobops.notify.discord import NOTIFY_CAP, notify_new_jobs
 
 API = "https://boards-api.greenhouse.io/v1/boards/{token}/jobs"
 DETAIL_CAP = 25  # max detail fetches per board per run; protects backfill runs
@@ -91,23 +91,25 @@ def poll_board(token: str, client: httpx.Client) -> list[str]:
 def run() -> None:
     """Poll every watched Greenhouse board sequentially; one failure never kills the run."""
     tokens = shard_tokens(load_watchlist().get("greenhouse", []))
-    all_new: list[str] = []
-    failures = 0
+    new_total = failures = notified = 0
     t0 = time.monotonic()
     with polite_client() as client:
         for i, token in enumerate(tokens, 1):
             try:
-                all_new += poll_board(token, client)
+                new_ids = poll_board(token, client)
+                new_total += len(new_ids)
+                # notify per board so a CI timeout can't swallow pings for
+                # boards already polled; cap is shared across the whole run
+                notified += notify_new_jobs(new_ids, cap=NOTIFY_CAP - notified)
             except Exception as e:
                 failures += 1
                 print(f"[greenhouse:{token}] {e}")
             if i % 25 == 0:
-                print(f"[greenhouse] {i}/{len(tokens)} boards, {len(all_new)} new so far")
-    notify_new_jobs(all_new)
+                print(f"[greenhouse] {i}/{len(tokens)} boards, {new_total} new so far")
     heartbeat("greenhouse", ok=failures == 0,
               detail=f"{len(tokens) - failures}/{len(tokens)} boards, "
-                     f"{len(all_new)} new, {time.monotonic() - t0:.0f}s")
-    print(f"[greenhouse] done: {len(all_new)} new, {failures} failed boards")
+                     f"{new_total} new, {time.monotonic() - t0:.0f}s")
+    print(f"[greenhouse] done: {new_total} new, {failures} failed boards")
 
 
 if __name__ == "__main__":

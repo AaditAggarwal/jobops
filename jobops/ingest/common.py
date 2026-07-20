@@ -46,11 +46,25 @@ def shard_tokens(tokens: list[str]) -> list[str]:
     """
     spec = os.environ.get("JOBOPS_SHARD")
     if not spec:
-        return tokens
+        return rotate_tokens(tokens)
     idx, count = (int(x) for x in spec.split("/"))
     mine = [t for t in tokens if zlib.crc32(t.lower().encode()) % count == idx]
     print(f"[shard {spec}] {len(mine)}/{len(tokens)} boards")
-    return mine
+    return rotate_tokens(mine)
+
+
+def rotate_tokens(tokens: list[str], now: float | None = None) -> list[str]:
+    """Rotate the polling order by a per-half-hour offset.
+
+    A job killed by the CI timeout always dies partway through the list; with
+    a fixed order the SAME tail boards would never be polled. Rotating the
+    starting point each 30-min cycle guarantees every board gets covered
+    within a few cycles even when runs are cut short.
+    """
+    if not tokens:
+        return tokens
+    offset = int((now if now is not None else time.time()) // 1800) % len(tokens)
+    return tokens[offset:] + tokens[:offset]
 
 NEW_GRAD_PAT = re.compile(
     r"\b(new ?grad(uate)?|university grad(uate)?|entry.?level|early career|campus|"

@@ -21,7 +21,7 @@ from jobops.ingest.common import (
     shard_tokens,
     upsert_company,
 )
-from jobops.notify.discord import notify_new_jobs
+from jobops.notify.discord import NOTIFY_CAP, notify_new_jobs
 
 API = "https://api.lever.co/v0/postings/{token}"
 
@@ -65,23 +65,23 @@ def poll_board(token: str, client: httpx.Client) -> list[str]:
 def run() -> None:
     """Poll every watched Lever board sequentially; one failure never kills the run."""
     tokens = shard_tokens(load_watchlist().get("lever", []))
-    all_new: list[str] = []
-    failures = 0
+    new_total = failures = notified = 0
     t0 = time.monotonic()
     with polite_client() as client:
         for i, token in enumerate(tokens, 1):
             try:
-                all_new += poll_board(token, client)
+                new_ids = poll_board(token, client)
+                new_total += len(new_ids)
+                notified += notify_new_jobs(new_ids, cap=NOTIFY_CAP - notified)
             except Exception as e:
                 failures += 1
                 print(f"[lever:{token}] {e}")
             if i % 25 == 0:
-                print(f"[lever] {i}/{len(tokens)} boards, {len(all_new)} new so far")
-    notify_new_jobs(all_new)
+                print(f"[lever] {i}/{len(tokens)} boards, {new_total} new so far")
     heartbeat("lever", ok=failures == 0,
               detail=f"{len(tokens) - failures}/{len(tokens)} boards, "
-                     f"{len(all_new)} new, {time.monotonic() - t0:.0f}s")
-    print(f"[lever] done: {len(all_new)} new, {failures} failed boards")
+                     f"{new_total} new, {time.monotonic() - t0:.0f}s")
+    print(f"[lever] done: {new_total} new, {failures} failed boards")
 
 
 if __name__ == "__main__":
