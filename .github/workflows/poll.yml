@@ -2,6 +2,9 @@ name: poll-jobs
 on:
   schedule: [{cron: "*/20 * * * *"}]   # every 20 min (Actions may add jitter; fine)
   workflow_dispatch:
+  push:
+    branches: [main]                   # smoke-test every change immediately;
+    paths-ignore: ["docs/**", "*.md"]  # safe: concurrency-guarded + idempotent
 
 concurrency:
   group: poll-jobs          # never poll from two runners at once (polite client)
