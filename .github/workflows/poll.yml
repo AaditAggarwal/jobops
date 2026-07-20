@@ -45,6 +45,7 @@ jobs:
           JOBOPS_BACKOFF_RETRIES: "0"                    # runner IPs get 429'd heavily; skip
           JOBOPS_BACKOFF_CAP: "5"                        # throttled boards self-heal next cycle
           JOBOPS_SHARD: ${{ matrix.shard }}              # empty -> poll all boards
+          JOBOPS_DB_MAX_CONN: "1"                        # session pooler caps 15 clients total
 
   enrich:
     needs: poll
@@ -63,3 +64,4 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           PYTHONUNBUFFERED: "1"
+          JOBOPS_DB_MAX_CONN: "1"

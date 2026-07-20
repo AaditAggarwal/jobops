@@ -31,13 +31,18 @@ def database_url() -> str:
 
 
 def get_pool() -> ConnectionPool:
-    """Return the process-wide connection pool, creating it on first use."""
+    """Return the process-wide connection pool, creating it on first use.
+
+    Max size is env-tunable (JOBOPS_DB_MAX_CONN, default 4): CI runs several
+    single-threaded pollers in parallel against Supabase's session pooler
+    (hard cap 15 clients), so each CI process must hold exactly 1 connection.
+    """
     global _pool
     if _pool is None:
         _pool = ConnectionPool(
             database_url(),
             min_size=1,
-            max_size=4,
+            max_size=int(os.environ.get("JOBOPS_DB_MAX_CONN", "4")),
             open=True,
             kwargs={"row_factory": dict_row},
         )
