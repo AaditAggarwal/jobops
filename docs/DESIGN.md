@@ -680,9 +680,10 @@ def score_company(cur, norm_name: str) -> tuple[float, str]:
     a, d, yr = best["a"] or 0, best["d"] or 0, best["yr"]
     if a == 0:
         return 0.05, "unlikely"
-    recency = 1.0 if yr >= 2024 else 0.6
+    recency = 1.0 if yr >= current_fiscal_year() - 2 else 0.6
     volume  = min(a / 50, 1.0)            # 50+ recent approvals ≈ routine sponsor
-    approval_rate = a / max(a + d, 1)
+    approval_rate = a / (a + d + 5)       # Laplace-smoothed: tiny sponsors must not
+                                          # hit 'verified' off a perfect 3-sample rate
     score = round(0.5*volume + 0.3*approval_rate + 0.2*recency, 3)
     status = "verified" if score >= 0.5 else ("likely" if score >= 0.2 else "unlikely")
     return score, status

@@ -47,6 +47,7 @@ jobs:
       - run: pip install -e .
       - run: |
           python -m jobops.enrich.dedup
+          python -m jobops.enrich.sponsor_match
           python -m jobops.enrich.retention
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

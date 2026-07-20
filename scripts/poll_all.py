@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import sys
 
-from jobops.enrich import dedup, retention
+from jobops.enrich import dedup, retention, sponsor_match
 from jobops.ingest import ashby, github_repos, greenhouse, lever, smartrecruiters
 
 POLLERS = [
@@ -19,6 +19,7 @@ POLLERS = [
     ("smartrecruiters", smartrecruiters.run),
     ("github_repos", github_repos.run),
     ("dedup", dedup.run),
+    ("sponsor_match", sponsor_match.run),
     ("retention", retention.run),
 ]
 
