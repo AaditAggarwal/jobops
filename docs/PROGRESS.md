@@ -160,23 +160,52 @@ workflows sharing one concurrency group (rationale above). DESIGN.md §4 updated
 in place.
 
 
+### Session 3b — 2026-09-04 — new database live, sponsor data loaded
+
+- **New Supabase project** (us-east-1, closer to the runners): migrated, secret
+  rotated, first push-triggered run had all 7 poll jobs green in 13s-14m
+  (the old ca-central-1 project timed out at 28 min).
+- **`.env` is now auto-loaded** by `jobops/__init__.py` (fills only what is
+  missing, so CI secrets always win). A local `uv run python -m jobops.etl...`
+  had silently fallen back to the docker-compose default and failed against
+  whatever Postgres was listening on localhost. This footgun was on the notes
+  list since session 2. Consequence: `DATABASE_URL` is now always set locally,
+  so `test_db_smoke` gates on `JOBOPS_INTEGRATION` instead.
+- **`require_db()` added to the ETL** — it was the one entrypoint I missed, and
+  it hung 30s dumping pool noise instead of failing in one line.
+- **USCIS Data Hub format changed** and the loader had to be taught it:
+  the exports are now **UTF-16, tab-delimited** (despite the .csv extension),
+  and the columns were renamed — "Initial Approval" -> "New Employment
+  Approval", "Continuing Approval" -> "Continuation Approval". Added
+  `sniff_encoding`/`sniff_delimiter`/`read_rows` and the new header variants;
+  old-format files still load. Inserts are batched at 5,000.
+- **Sponsor data is live:** 231,315 rows from FY2023-FY2026 -> 1,763 companies
+  scored: 315 verified, 343 likely, 194 unlikely, 911 unknown. Badges now
+  render on notifications.
+- **`retention.compact_raw()`**: applies trim_raw's rule in SQL to rows written
+  by older code, so the 32k pre-existing rows healed instead of carrying a
+  duplicate JD until they aged out. Avg raw payload 2,445 B -> 1,227 B.
+- **`heartbeat()` no longer raises.** A pool timeout writing telemetry (caused
+  by the bulk USCIS load saturating the pooler's 15-client cap) turned an
+  otherwise fully successful enrich job red.
+
+**Size watch:** 231 MB of the 500 MB cap — 163 MB jobs (32.6k rows; description
+averages 3,378 B and is the bulk), 56 MB sponsor_records. Sponsor data is a
+fixed cost; jobs grow with the corpus. If it climbs past ~400 MB the levers, in
+order: RETENTION_DAYS 30 -> 14, then drop `description` for non-new-grad rows
+(39 MB of the current total, ~2% of the value).
+
 ## Exact next steps (for the next session)
 
-1. **BLOCKED ON USER — new database.** The old Supabase project is deleted.
-   Create a fresh project, take the **session pooler** URI, then:
-   `uv run python scripts/migrate.py` (applies 001-003 to the empty DB),
-   `gh secret set DATABASE_URL`, and `gh workflow run poll-jobs`. The first
-   cycle is a backfill: expect thousands of inserts and the 15-ping notify cap.
-2. Watch `retention`'s size line in the enrich job. If the DB approaches
-   500 MB again, drop RETENTION_DAYS from 30 to 14 — `trim_raw` should make
-   that unnecessary, but it is the lever if not.
+1. Watch `retention`'s size line in the enrich job (see the size watch above).
+2. Confirm the sponsor badges look right on the next few Discord pings, now
+   that 315 companies are 'verified'.
 3. Re-run `uv run python scripts/discover_boards.py` monthly to refresh the
    tail (probe cache makes it cheap), and `scripts/check_watchlist.py --tier core`
    to prune boards that have moved ATS.
-4. Still open from Phase 5: USCIS Data Hub CSVs must be downloaded by hand into
-   `data/uscis/` (uscis.gov 403s scripted clients), then
-   `uv run python -m jobops.etl.uscis_hub && uv run python -m jobops.enrich.sponsor_match`
-   lights up the sponsor badges on notifications.
+4. Phase 5 leftover: DOL LCA ETL (`jobops/etl/dol_lca.py`) still unbuilt —
+   needs `openpyxl` (not in the fixed stack; ask first). USCIS alone drives the
+   current score. Re-download the Data Hub CSVs each October for the new FY.
 5. Then per DESIGN.md roadmap: §6 JD enrichment (LLM fit scoring), §13 dashboard,
    or §7 resume automation — user will scope via session prompt.
 

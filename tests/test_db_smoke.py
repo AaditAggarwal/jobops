@@ -1,6 +1,8 @@
 """Integration smoke test: all expected tables exist after migration.
 
-Skipped unless DATABASE_URL is set — never runs against an implicit default.
+Skipped unless JOBOPS_INTEGRATION is set. DATABASE_URL used to be the gate, but
+the package now auto-loads .env, so it is set on every developer machine and no
+longer signals intent to run tests against a live database.
 """
 
 import os
@@ -25,8 +27,8 @@ EXPECTED_TABLES = {
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
-        not os.environ.get("DATABASE_URL"),
-        reason="DATABASE_URL not set",
+        not os.environ.get("JOBOPS_INTEGRATION"),
+        reason="set JOBOPS_INTEGRATION=1 to run against the live database",
     ),
 ]
 

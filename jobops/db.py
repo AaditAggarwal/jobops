@@ -118,8 +118,16 @@ def execute(sql: str, params: Any = None) -> int:
 
 
 def heartbeat(source: str, ok: bool, detail: str | None = None) -> None:
-    """Record a run outcome for a poller/ETL job (see CLAUDE.md error conventions)."""
-    execute(
-        "INSERT INTO heartbeats (source, ok, detail) VALUES (%s, %s, %s)",
-        (source, ok, detail),
-    )
+    """Record a run outcome for a poller/ETL job (see CLAUDE.md error conventions).
+
+    Never raises. A heartbeat is telemetry about work that has already happened,
+    so it must not be able to fail the run that produced it — on 2026-09-04 a
+    pool timeout writing one of these turned a fully successful enrich job red.
+    """
+    try:
+        execute(
+            "INSERT INTO heartbeats (source, ok, detail) VALUES (%s, %s, %s)",
+            (source, ok, detail),
+        )
+    except Exception as e:  # noqa: BLE001 - telemetry is never worth a failure
+        print(f"[{source}] heartbeat write failed (ignored): {type(e).__name__}")
