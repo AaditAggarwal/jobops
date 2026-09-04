@@ -6,10 +6,22 @@ Policy:
     and feed funnel metrics),
   - any row referenced by an application or a resume_version is never deleted.
 - heartbeats older than RETENTION_DAYS are deleted.
+- raw payloads are compacted (compact_raw) and, after a grace period,
+  descriptions are dropped from non-new-grad postings (prune_descriptions).
 
-Old postings are dead postings — boards fill or close them long before 30
-days. Deleting whole rows (rather than nulling raw/description) keeps the
-"always keep raw payloads" convention true for every row we retain.
+Old postings are dead postings — boards fill or close them long before two
+weeks are up.
+
+**Deviation from the "always keep raw payloads" convention (user-approved
+2026-09-04):** for a *non-new-grad* posting older than DESCRIPTION_GRACE_DAYS,
+both the description column and the JD copy inside raw are dropped. Those rows
+are 98% of the table and represent roles this system will never apply to, and
+the free tier's 500 MB ceiling is a hard operational limit — a full database
+stops accepting writes and eventually gets deleted, which is what killed the
+first one. Everything else about raw is preserved, and new-grad rows, applied-to
+rows, and anything inside the grace period keep their full text. The cost is
+that a future, better new-grad classifier cannot be re-run over the pruned
+history without re-fetching.
 """
 
 from __future__ import annotations
@@ -20,8 +32,14 @@ from jobops.db import execute, heartbeat, query_one, require_db
 from jobops.ingest.common import RAW_JD_KEYS
 from jobops.notify.discord import notify_infra_failure
 
-RETENTION_DAYS = 30
+RETENTION_DAYS = 14
 NEW_GRAD_RETENTION_DAYS = 90
+
+# Descriptions are not pruned immediately: pollers fill them from a follow-up
+# detail fetch and refine is_new_grad from the JD in the same run, and dedup
+# runs after. Three days is well clear of both while still catching a row long
+# before the 14-day delete.
+DESCRIPTION_GRACE_DAYS = 3
 
 # Hosted free tiers cap the database around 500 MB and stop accepting writes —
 # or pause the project outright — when it fills. That is how the first Supabase
@@ -81,6 +99,44 @@ def compact_raw() -> int:
     return fixed
 
 
+def prune_descriptions() -> int:
+    """Drop stored JD text from settled non-new-grad postings; returns rows pruned.
+
+    The single largest recoverable cost in the table: descriptions average
+    ~3.4 KB and non-new-grad rows hold 98% of them, for roles that by
+    definition will never be applied to. See this module's docstring for the
+    convention deviation this represents.
+
+    Never touches a new-grad row, a row referenced by an application or resume
+    version, or a row inside DESCRIPTION_GRACE_DAYS — is_new_grad is refined
+    from the JD after insert, so pruning early would corrupt the classification
+    it depends on. Marks `raw._description_pruned` so a NULL description stays
+    distinguishable from one a board never provided. Idempotent and batched.
+    """
+    pruned = execute(
+        """
+        WITH target AS (
+            SELECT j.id FROM jobs j
+            WHERE j.description IS NOT NULL
+              AND j.is_new_grad IS NOT TRUE
+              AND j.first_seen_at < now() - make_interval(days => %(grace)s)
+              AND NOT EXISTS (SELECT 1 FROM applications a WHERE a.job_id = j.id)
+              AND NOT EXISTS (SELECT 1 FROM resume_versions r WHERE r.job_id = j.id)
+            LIMIT %(batch)s
+        )
+        UPDATE jobs j
+        SET description = NULL,
+            raw = j.raw || jsonb_build_object('_description_pruned', true)
+        FROM target
+        WHERE j.id = target.id
+        """,
+        {"grace": DESCRIPTION_GRACE_DAYS, "batch": COMPACT_BATCH},
+    )
+    if pruned:
+        print(f"[retention] pruned descriptions from {pruned} non-new-grad postings")
+    return pruned
+
+
 def check_size() -> float:
     """Report database size, alerting Discord past 80% of the free-tier cap."""
     mb = db_size_mb()
@@ -114,10 +170,11 @@ def run() -> None:
         (RETENTION_DAYS,),
     )
     compacted = compact_raw()
+    depruned = prune_descriptions()
     mb = check_size()
     heartbeat("retention", ok=True,
-              detail=f"{deleted} jobs, {hb} heartbeats pruned, "
-                     f"{compacted} raw compacted; db {mb} MB")
+              detail=f"{deleted} jobs, {hb} heartbeats pruned, {compacted} raw "
+                     f"compacted, {depruned} descriptions pruned; db {mb} MB")
     print(f"[retention] pruned {deleted} stale jobs, {hb} old heartbeats")
 
 

@@ -191,9 +191,25 @@ in place.
 
 **Size watch:** 231 MB of the 500 MB cap — 163 MB jobs (32.6k rows; description
 averages 3,378 B and is the bulk), 56 MB sponsor_records. Sponsor data is a
-fixed cost; jobs grow with the corpus. If it climbs past ~400 MB the levers, in
-order: RETENTION_DAYS 30 -> 14, then drop `description` for non-new-grad rows
-(39 MB of the current total, ~2% of the value).
+fixed cost; jobs grow with the corpus.
+
+**Both size levers pulled (user-approved 2026-09-04), not just held in reserve:**
+- `RETENTION_DAYS` 30 -> 14. New-grad rows still keep 90 days.
+- `prune_descriptions()` drops the JD from non-new-grad postings older than
+  `DESCRIPTION_GRACE_DAYS` (3), skipping new-grad rows and anything referenced
+  by an application or resume version, and marking `raw._description_pruned` so
+  a NULL description stays distinguishable from one a board never sent. The
+  grace period exists because is_new_grad is refined from the JD by a follow-up
+  detail fetch *after* insert — pruning sooner would corrupt the very
+  classification it keys on. Verified against the live table inside a
+  rolled-back transaction: 5,000 rows matched, all 296 new-grad descriptions
+  untouched. Nothing has actually pruned yet because every row in the new
+  database is younger than the grace period.
+- This is a deliberate deviation from "always keep raw payloads", recorded in
+  the retention module docstring. The cost: a future, better new-grad
+  classifier cannot be re-run over pruned history without re-fetching. Accepted
+  because those rows are roles this system will never apply to, and a full
+  free-tier database is what killed the first project.
 
 ## Exact next steps (for the next session)
 
