@@ -159,7 +159,8 @@ jobops/
 ├── data/
 │   ├── master_resume.yaml        # single source of truth for your experience
 │   ├── stories.yaml              # behavioral story bank (STAR)
-│   └── watchlist.yaml            # ATS board tokens to poll
+│   ├── watchlist.yaml            # ATS board tokens, core tier (polled every 30 min)
+│   └── watchlist_tail.yaml       # generated long tail (hourly); see scripts/discover_boards.py
 ├── scripts/
 │   ├── migrate.py
 │   ├── seed_watchlist.py
@@ -340,6 +341,16 @@ Endpoint reference:
 | SmartRecruiters | `https://api.smartrecruiters.com/v1/companies/{token}/postings` | Paginated; job detail at `.../postings/{id}` |
 | Workday | No public API; per-tenant `.../wday/cxs/{tenant}/{site}/jobs` JSON endpoints exist but are undocumented and change | Prefer the company's email alerts + your Gmail parser (§4.5) for Workday shops |
 | Taleo / iCIMS | No usable public API | Email alerts + Gmail parser |
+
+**Deviation (2026-09-01):** token discovery is automated by
+`scripts/discover_boards.py` — it mines real tokens from public new-grad listing
+repos, guesses-and-verifies tokens for YC companies currently hiring, probes a
+curated majors list, and ranks candidates by engineering-title and US-location
+density measured from the board's own payload. The corpus is split into two
+cadence tiers (`watchlist.yaml` every 30 min, `watchlist_tail.yaml` hourly, run by
+`poll.yml` and `poll-tail.yml` under one shared concurrency group) so it can grow
+past what a single 30-minute cycle can poll without ever opening more than two
+sequential streams at one provider.
 
 **How you get board tokens:** the careers page URL usually contains it (`boards.greenhouse.io/stripe` → token `stripe`; `jobs.lever.co/scaleai` → `scaleai`; `jobs.ashbyhq.com/ramp` → `ramp`). Seed your watchlist from: MyVisaJobs top-sponsor lists, the SimplifyJobs new-grad repo's company set, and every company you've ever been interested in. Expect 200–600 tokens after a weekend of curation. Store in `data/watchlist.yaml`:
 

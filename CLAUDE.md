@@ -75,7 +75,7 @@ jobops/
 ├── docs/            DESIGN.md, PROGRESS.md
 ├── migrations/      001_core.sql, 002_sponsors.sql, 003_metrics_views.sql, ...
 ├── jobops/          db.py, models.py
-│   ├── ingest/      common.py, greenhouse.py, lever.py, ashby.py,
+│   ├── ingest/      common.py, board_probe.py, greenhouse.py, lever.py, ashby.py,
 │   │                smartrecruiters.py, github_repos.py, gmail_alerts.py, rss.py
 │   ├── enrich/      dedup.py, sponsor_match.py, jd_score.py, triage.py
 │   ├── etl/         dol_lca.py, uscis_hub.py
@@ -84,10 +84,12 @@ jobops/
 │   ├── notify/      discord.py, digest.py
 │   └── dashboard/   app.py
 ├── data/            master_resume.yaml, stories.yaml, watchlist.yaml,
+│                    watchlist_tail.yaml (generated; hourly tier),
 │                    profile_summary.txt, uscis/ (gitignored CSVs), dol/ (gitignored)
-├── scripts/         migrate.py, seed_watchlist.py, add_contact.py, backup.sh
+├── scripts/         migrate.py, seed_watchlist.py, add_contact.py, backup.sh,
+│                    preflight.py, discover_boards.py, check_watchlist.py
 ├── tests/           mirrors jobops/ package structure
-└── .github/workflows/  poll.yml, etl.yml
+└── .github/workflows/  poll.yml (core tier, */30), poll-tail.yml (hourly), etl.yml
 ```
 
 ## Database conventions

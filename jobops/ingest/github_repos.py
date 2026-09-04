@@ -14,7 +14,7 @@ from typing import Any
 
 import httpx
 
-from jobops.db import get_conn, heartbeat
+from jobops.db import get_conn, heartbeat, require_db
 from jobops.ingest.common import insert_job, polite_client, upsert_company
 from jobops.notify.discord import notify_new_jobs
 
@@ -64,6 +64,7 @@ def poll_repo(owner: str, repo: str, branch: str, path: str,
 
 def run() -> None:
     """Poll every listing repo sequentially; one failure never kills the run."""
+    require_db("github_repos")
     headers = {}
     # GITHUB_TOKEN in Actions (mapped from the GH_PAT secret); GH_PAT locally via .env
     if tok := os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_PAT"):

@@ -34,7 +34,6 @@ greenhouse:
   - arizeai  # Arize AI
   - asana  # Asana
   - attentive  # Attentive
-  - aurorainnovation  # Aurora Innovation
   - axq  # AXQ Capital
   - boxinc  # Box
   - bracebridgecapital  # Bracebridge Capital
@@ -55,7 +54,6 @@ greenhouse:
   - cresta  # Cresta
   - databricks
   - datadog
-  - dbtlabsinc  # dbt Labs
   - discord  # Discord
   - doordashusa
   - dropbox
@@ -86,7 +84,6 @@ greenhouse:
   - koboldmetals  # KoBold Metals
   - latitude  # Latitude AI
   - lyft  # Lyft
-  - marqeta  # Marqeta
   - mavensecuritiesholdingltd  # Maven Securities
   - maymobility  # May Mobility
   - mixpanel  # Mixpanel
@@ -158,7 +155,6 @@ lever:
   - outreach  # Outreach
   - palantir
   - pigment  # Pigment
-  - plaid
   - schmidt-entities  # Schmidt Sciences
   - SimbeRobotics  # Simbe Robotics
   - spotify
@@ -193,7 +189,6 @@ ashby:
   - exa  # Exa
   - faros-ai  # Faros AI
   - figure  # Figure
-  - fundamentalresearchlabs  # Fundamental Research Labs
   - gen-digital  # Gen Digital
   - glide  # Glide
   - handshake  # Handshake
@@ -260,6 +255,5 @@ smartrecruiters:
   - ServiceNow
   - Sportradar  # Sportradar
   - TruvenHealthAnalyticsanIBMCompany  # Merative
-  - Visa
   - WesternDigital
   - Wise  # Wise

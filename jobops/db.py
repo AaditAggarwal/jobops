@@ -7,15 +7,18 @@ come back as dicts via psycopg's dict_row.
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
+from urllib.parse import urlsplit
 
 import psycopg
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
 DEFAULT_DATABASE_URL = "postgresql://jobops:jobops@localhost:5432/jobops"
+CONNECT_TIMEOUT = int(os.environ.get("JOBOPS_DB_CONNECT_TIMEOUT", "10"))
 
 _pool: ConnectionPool | None = None
 
@@ -44,9 +47,49 @@ def get_pool() -> ConnectionPool:
             min_size=1,
             max_size=int(os.environ.get("JOBOPS_DB_MAX_CONN", "4")),
             open=True,
-            kwargs={"row_factory": dict_row},
+            timeout=float(os.environ.get("JOBOPS_DB_POOL_TIMEOUT", "30")),
+            reconnect_timeout=float(os.environ.get("JOBOPS_DB_RECONNECT_TIMEOUT", "60")),
+            kwargs={"row_factory": dict_row, "connect_timeout": CONNECT_TIMEOUT},
         )
     return _pool
+
+
+def check_connection() -> str | None:
+    """Try one direct connection; return None if healthy, else a one-line reason.
+
+    Deliberately bypasses the pool: the pool retries a dead host for minutes,
+    which is how a deleted database once burned 28-minute CI jobs on every
+    board in the watchlist before failing.
+    """
+    try:
+        with psycopg.connect(database_url(), connect_timeout=CONNECT_TIMEOUT) as conn:
+            conn.execute("SELECT 1")
+        return None
+    except Exception as e:  # noqa: BLE001 - any failure here means "unusable"
+        return f"{type(e).__name__}: {' '.join(str(e).split())[:300]}"
+
+
+def require_db(source: str) -> None:
+    """Abort the process immediately (exit 2) when the database is unreachable.
+
+    Every poller calls this before its first request so an infrastructure
+    outage costs one second and one clear log line, not a full polling cycle
+    of failed inserts. Notification of the outage is the workflow preflight
+    job's business (jobops.notify.discord.notify_infra_failure), not each
+    poller's - seven matrix jobs must not fire seven identical alerts.
+    """
+    err = check_connection()
+    if err is None:
+        return
+    print(f"[{source}] DATABASE UNREACHABLE at {redacted_dsn()} -> {err}", file=sys.stderr)
+    print(f"[{source}] aborting before polling; nothing can be stored", file=sys.stderr)
+    sys.exit(2)
+
+
+def redacted_dsn() -> str:
+    """The connection target as host:port/dbname - never the password."""
+    u = urlsplit(database_url())
+    return f"{u.hostname}:{u.port or 5432}{u.path}"
 
 
 @contextmanager

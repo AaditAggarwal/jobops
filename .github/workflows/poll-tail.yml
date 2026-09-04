@@ -1,0 +1,62 @@
+name: poll-jobs-tail
+# The long tail of boards (data/watchlist_tail.yaml) — YC companies currently
+# hiring, plus mid-size employers mined from public new-grad listing repos.
+# Hourly rather than every 30 minutes: on GitHub runner IPs the ATS APIs tarpit
+# us at ~7-30s per board, and the polite-client rule caps us at two sequential
+# streams per provider, so the corpus is split by cadence instead of by
+# opening more streams. The majors stay on the 30-minute cycle in poll.yml.
+on:
+  schedule: [{cron: "15 * * * *"}]   # :15, between the core cycles at :00/:30
+  workflow_dispatch:
+
+# Same group as poll.yml on purpose — core and tail must never poll a provider
+# concurrently, or that provider would see four streams instead of two.
+concurrency:
+  group: jobops-poll
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -e .
+      - run: python scripts/preflight.py
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          PYTHONUNBUFFERED: "1"
+
+  poll:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 45   # tail boards are numerous; rotate_tokens covers the
+                          # remainder next hour if a slow-IP draw runs long
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {poller: greenhouse, shard: "0/2"}
+          - {poller: greenhouse, shard: "1/2"}
+          - {poller: ashby, shard: "0/2"}
+          - {poller: ashby, shard: "1/2"}
+          - {poller: lever}
+          - {poller: smartrecruiters}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -e .
+      - run: python -m jobops.ingest.${{ matrix.poller }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          PYTHONUNBUFFERED: "1"
+          JOBOPS_BACKOFF_RETRIES: "0"
+          JOBOPS_BACKOFF_CAP: "5"
+          JOBOPS_SHARD: ${{ matrix.shard }}
+          JOBOPS_TIER: tail                              # data/watchlist_tail.yaml
+          JOBOPS_DB_MAX_CONN: "1"

@@ -6,10 +6,13 @@ on:
     branches: [main]                   # smoke-test every change immediately;
     paths-ignore: ["docs/**", "*.md"]  # safe: concurrency-guarded + idempotent
 
+# Shared with poll-tail.yml: the two cadence tiers must never run at the same
+# time, or a provider would see four concurrent streams (2 core shards + 2 tail
+# shards) instead of the two the polite-client rule allows.
 concurrency:
-  group: poll-jobs           # never poll from two workflow runs at once;
+  group: jobops-poll
   cancel-in-progress: false  # queue instead — cancelling killed healthy runs when
-                             # cron fired mid-cycle; 15-min job timeouts bound queuing
+                             # cron fired mid-cycle; job timeouts bound queuing
 
 # Pollers run as parallel jobs. Big providers are split into TWO jobs over
 # disjoint board halves (JOBOPS_SHARD) — each provider sees at most 2
@@ -17,7 +20,25 @@ concurrency:
 # amendment, 2026-07-20; runner IPs are tarpitted ~7-30s/request, so one
 # sequential pass cannot finish a large provider inside a cycle).
 jobs:
+  # One cheap check before 7 poll jobs commit to a 28-minute timeout each.
+  # A dead database used to cost a full cycle of failed inserts per board and
+  # notified nobody; now it costs 40 seconds and pings Discord.
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -e .
+      - run: python scripts/preflight.py
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          PYTHONUNBUFFERED: "1"
+
   poll:
+    needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 28   # slow-IP draws hit ~30s/board; cycle is 30 min
     strategy:
@@ -45,11 +66,12 @@ jobs:
           JOBOPS_BACKOFF_RETRIES: "0"                    # runner IPs get 429'd heavily; skip
           JOBOPS_BACKOFF_CAP: "5"                        # throttled boards self-heal next cycle
           JOBOPS_SHARD: ${{ matrix.shard }}              # empty -> poll all boards
+          JOBOPS_TIER: core                              # data/watchlist.yaml (the majors)
           JOBOPS_DB_MAX_CONN: "1"                        # session pooler caps 15 clients total
 
   enrich:
-    needs: poll
-    if: always()              # dedup/prune even when one poller job failed
+    needs: [preflight, poll]
+    if: always() && needs.preflight.result == 'success'  # dedup/prune even when a poller failed
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -63,5 +85,6 @@ jobs:
           python -m jobops.enrich.retention
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}  # retention alerts on DB size
           PYTHONUNBUFFERED: "1"
           JOBOPS_DB_MAX_CONN: "1"

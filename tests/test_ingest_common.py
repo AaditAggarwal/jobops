@@ -2,6 +2,7 @@
 
 import pytest
 
+from jobops.ingest import common
 from jobops.ingest.common import looks_new_grad, normalize_company
 
 
@@ -97,3 +98,27 @@ class TestLooksNewGrad:
     def test_empty_inputs(self):
         assert looks_new_grad("") is False
         assert looks_new_grad("", "") is False
+
+
+def test_jd_fallback_requires_a_technical_title():
+    # "entry level" shows up in the body of all sorts of postings; without a
+    # technical title the JD fallback flagged things like administrative roles.
+    jd = "This is an entry level position with room to grow."
+    assert common.looks_new_grad("Software Engineer", jd) is True
+    assert common.looks_new_grad("Faculty Administrative Assistant", jd) is False
+
+
+def test_new_grad_title_still_wins_without_a_jd():
+    assert common.looks_new_grad("New Grad Rotational Analyst") is True
+
+
+@pytest.mark.parametrize(
+    "location", ["San Francisco, CA", "Remote - US", "Austin, TX, United States", "", None]
+)
+def test_us_locations_pass(location):
+    assert common.looks_us_location(location) is True
+
+
+@pytest.mark.parametrize("location", ["London, UK", "Bengaluru, India", "Toronto, Canada"])
+def test_non_us_locations_fail(location):
+    assert common.looks_us_location(location) is False

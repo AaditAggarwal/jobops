@@ -1,6 +1,7 @@
 # PROGRESS
 
-## Status: Phase 3 complete (ingestion engine: 5 pollers, watchlist, notify, dedup, scheduling)
+## Status: Phase 3 complete + Phase 5 partial (sponsor classifier). Pipeline was DOWN
+2026-07-25 -> 2026-09-01 (deleted Supabase project); code fixed, awaiting a new DATABASE_URL.
 
 ## Sessions completed
 
@@ -86,12 +87,98 @@ Runner-IP speed variance is extreme (3.7s/board to 32s/board between jobs of the
 
 Cloud diagnosis final: ATS APIs tarpit GitHub runner IPs (~7-30s/request regardless of payload; lever = 30s/board with zero failures), so greenhouse/ashby couldn't finish a sequential pass inside the 15-min job timeout. User chose 2-way sharding over alternate-cycles/trimming (AskUserQuestion). `shard_tokens()` in ingest/common.py filters by `JOBOPS_SHARD="i/n"` env using crc32 (NOT hash() — randomized per process, would break disjointness across CI jobs); workflow matrix runs greenhouse+ashby as 2 jobs each over disjoint halves. CLAUDE.md polite-client rule amended in place (user-approved): max 2 parallel sequential streams per provider, disjoint boards, never the same board concurrently. Tests assert the disjoint/complete/stable partition guarantee.
 
+### Session 3 — 2026-09-01 — outage recovery + corpus expansion
+
+**The outage (root cause).** Every Actions run since ~2026-07-25 failed with
+`FATAL: (ENOTFOUND) tenant/user postgres.zzhrhamumvosrlxqpisc not found`. The
+Supabase project is gone — `zzhrhamumvosrlxqpisc.supabase.co` no longer resolves
+in DNS at all. Most likely the free tier's 500 MB cap: the first backfill put
+33,874 jobs with full raw JSONB into it, the project went read-only/paused, and
+the grace period expired. Nothing irreplaceable was lost (jobs and companies
+rebuild from the live boards; no applications/contacts existed yet).
+
+**Why it was silent for six weeks:** job pings were the pipeline's only output,
+so "pipeline down" and "quiet job market" looked identical from the outside.
+Each cycle then burned seven 28-minute jobs failing every insert.
+
+**Built:**
+- `jobops/db.py`: `check_connection()` (direct connect, bypasses the pool's
+  minutes-long reconnect), `require_db(source)` (exit 2 with one clear line),
+  `redacted_dsn()`, env-tunable connect/pool/reconnect timeouts. Every poller,
+  every enrich module, and poll_all now call `require_db()` first.
+- `scripts/preflight.py` + a `preflight` job gating both workflows: one DB check
+  per cycle, one Discord alert on failure (`notify_infra_failure`), all poll
+  jobs skipped. A dead database now costs ~40s and pings the phone.
+- Storage discipline: `trim_raw()` drops JD blobs from `jobs.raw` when the JD is
+  already in the `description` column (~25 KB -> ~3 KB per row; rows with no
+  stored description keep their payload intact, so re-runnability holds).
+  `retention.check_size()` alerts Discord past 80% of the free-tier cap.
+- `jobops/ingest/board_probe.py`: shared live board probe. Verdicts are pure and
+  tested; 429/5xx are inconclusive (never "dead"), and the same response yields
+  posting count, engineering-title density, and US-location density at no extra
+  request. `check_watchlist.py` now uses it.
+- `scripts/discover_boards.py`: candidate discovery from three public sources —
+  new-grad/internship listing repos (real tokens extracted from job URLs), the
+  YC directory's "currently hiring" list (yc-oss public JSON, guessed + verified),
+  and a curated majors list. Verifies every token live, ranks by source quality
+  x engineering density x US density, and applies curation (defense/ITAR,
+  staffing mills, non-US). Resumable via a cached probe file.
+- Cadence tiers: `data/watchlist.yaml` (core, every 30 min) and
+  `data/watchlist_tail.yaml` (generated, hourly) via `load_watchlist(tier=...)`
+  / `JOBOPS_TIER`; new `.github/workflows/poll-tail.yml` shares poll.yml's
+  concurrency group so the two tiers never poll one provider at the same time.
+  This doubles the corpus without opening a third stream at any provider —
+  the polite-client rule is unchanged.
+
+**Corpus:** 232 core + 280 tail = **512 verified boards** (was 238). Probed
+~4,900 candidates, 1,834 resolved live, top 280 kept by rank. Composition
+quotas: 50% new-grad-listing/curated majors, 35% YC companies currently hiring
+(team >= 10, US-relevant), 15% other. Pruned 6 dead core tokens (plaid, marqeta,
+dbtlabsinc, aurorainnovation, fundamentalresearchlabs, SR Visa).
+
+**Bugs found while building:**
+- Lever's posting title field is `text`, not `title` — the board ranker scored
+  every Lever board as having zero engineering roles and dropped the provider
+  entirely from the first selection. (The lever *poller* always had this right.)
+- Curation only checked the company label, but discovery mines tokens out of
+  URLs where the name lives in the token — `words_in_token()` splits camel case
+  back apart so "NorthStarStaffingSolutions1" is caught.
+- SmartRecruiters discovery is opt-in (`--include-sr`): its extraction is ~80%
+  staffing firms (session 2b) and its limit=1 probe cannot measure density.
+
+**Notification quality (the two gaps flagged in earlier sessions, now closed):**
+`looks_new_grad`'s JD fallback now requires a technical title, and
+`notify_new_job` skips non-US locations. Both were necessary before doubling
+the corpus, which would otherwise have doubled the noise.
+
+**Tests:** 181 passing (was 155). New: `test_board_probe.py` (probe verdicts,
+per-ATS title/location shapes), `test_discovery.py` (token extraction, slug
+guessing, curation), `test_watchlist_tiers.py` (tier loading, merge, trim_raw).
+
+**Deviations from DESIGN.md:** §4.4's single poll workflow is now two tiered
+workflows sharing one concurrency group (rationale above). DESIGN.md §4 updated
+in place.
+
+
 ## Exact next steps (for the next session)
 
-1. **User action first:** download USCIS H-1B Employer Data Hub CSVs (FY2022+) from uscis.gov ("H-1B Employer Data Hub Files" page — browser only, site 403s scripts) into `data/uscis/`.
-2. Then: `uv run python -m jobops.etl.uscis_hub` followed by `uv run python -m jobops.enrich.sponsor_match` (both already built, tested, and wired into the cycle) — this lights up 🟢/🟡 badges on notifications.
-3. Remaining Phase 5 item: DOL LCA ETL (`jobops/etl/dol_lca.py`) — needs `openpyxl` (not in fixed stack; ask user) and the quarterly disclosure files; USCIS alone drives the current score.
-4. Then per DESIGN.md roadmap: §6 JD enrichment (LLM fit scoring via jobops/llm.py), §13 dashboard, or §7 resume automation — user will scope via session prompt.
+1. **BLOCKED ON USER — new database.** The old Supabase project is deleted.
+   Create a fresh project, take the **session pooler** URI, then:
+   `uv run python scripts/migrate.py` (applies 001-003 to the empty DB),
+   `gh secret set DATABASE_URL`, and `gh workflow run poll-jobs`. The first
+   cycle is a backfill: expect thousands of inserts and the 15-ping notify cap.
+2. Watch `retention`'s size line in the enrich job. If the DB approaches
+   500 MB again, drop RETENTION_DAYS from 30 to 14 — `trim_raw` should make
+   that unnecessary, but it is the lever if not.
+3. Re-run `uv run python scripts/discover_boards.py` monthly to refresh the
+   tail (probe cache makes it cheap), and `scripts/check_watchlist.py --tier core`
+   to prune boards that have moved ATS.
+4. Still open from Phase 5: USCIS Data Hub CSVs must be downloaded by hand into
+   `data/uscis/` (uscis.gov 403s scripted clients), then
+   `uv run python -m jobops.etl.uscis_hub && uv run python -m jobops.enrich.sponsor_match`
+   lights up the sponsor badges on notifications.
+5. Then per DESIGN.md roadmap: §6 JD enrichment (LLM fit scoring), §13 dashboard,
+   or §7 resume automation — user will scope via session prompt.
 
 ## Notes for future sessions
 - Notification semantics gap: pings fire at the end of each poller's run(), so a killed/cancelled run inserts jobs that never notify (observed 2026-07-19: 99 new-grad roles silent after Actions timeout kills). Consider a `notified_at` column on jobs so notification becomes a resumable step instead of an in-memory afterthought.

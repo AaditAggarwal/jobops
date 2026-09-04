@@ -14,14 +14,44 @@ days. Deleting whole rows (rather than nulling raw/description) keeps the
 
 from __future__ import annotations
 
-from jobops.db import execute, heartbeat
+import os
+
+from jobops.db import execute, heartbeat, query_one, require_db
+from jobops.notify.discord import notify_infra_failure
 
 RETENTION_DAYS = 30
 NEW_GRAD_RETENTION_DAYS = 90
 
+# Hosted free tiers cap the database around 500 MB and stop accepting writes —
+# or pause the project outright — when it fills. That is how the first Supabase
+# project died (silently, on 2026-07-25), so size is now a monitored signal.
+SIZE_LIMIT_MB = int(os.environ.get("JOBOPS_DB_LIMIT_MB", "500"))
+SIZE_WARN_FRACTION = 0.8
+
+
+def db_size_mb() -> float:
+    """Total size of the current database in megabytes."""
+    row = query_one("SELECT pg_database_size(current_database()) AS b")
+    return round((row["b"] if row else 0) / 1_048_576, 1)
+
+
+def check_size() -> float:
+    """Report database size, alerting Discord past 80% of the free-tier cap."""
+    mb = db_size_mb()
+    pct = 100 * mb / SIZE_LIMIT_MB if SIZE_LIMIT_MB else 0
+    print(f"[retention] database at {mb} MB ({pct:.0f}% of the {SIZE_LIMIT_MB} MB cap)")
+    if mb >= SIZE_LIMIT_MB * SIZE_WARN_FRACTION:
+        notify_infra_failure(
+            f"database is {mb} MB, {pct:.0f}% of the {SIZE_LIMIT_MB} MB free-tier cap",
+            "Tighten RETENTION_DAYS or upgrade the plan. A full free-tier "
+            "database stops accepting writes and is eventually deleted.",
+        )
+    return mb
+
 
 def run() -> None:
-    """Delete stale, unreferenced postings and old heartbeat rows."""
+    """Delete stale, unreferenced postings and old heartbeat rows; watch DB size."""
+    require_db("retention")
     deleted = execute(
         """
         DELETE FROM jobs j
@@ -37,7 +67,9 @@ def run() -> None:
         "DELETE FROM heartbeats WHERE ran_at < now() - make_interval(days => %s)",
         (RETENTION_DAYS,),
     )
-    heartbeat("retention", ok=True, detail=f"{deleted} jobs, {hb} heartbeats pruned")
+    mb = check_size()
+    heartbeat("retention", ok=True,
+              detail=f"{deleted} jobs, {hb} heartbeats pruned; db {mb} MB")
     print(f"[retention] pruned {deleted} stale jobs, {hb} old heartbeats")
 
 

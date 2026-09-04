@@ -15,7 +15,7 @@ from typing import Any
 
 from rapidfuzz import fuzz
 
-from jobops.db import get_conn, heartbeat, query
+from jobops.db import get_conn, heartbeat, query, require_db
 
 TITLE_THRESHOLD = 92
 WINDOW_DAYS = 14
@@ -65,6 +65,7 @@ def find_duplicates(rows: list[dict[str, Any]]) -> list[tuple[str, str, str]]:
 
 def run() -> None:
     """Mark cross-source duplicates among recent status='new' jobs as skipped."""
+    require_db("dedup")
     rows = query(
         """
         SELECT j.id, j.title, j.location, j.source, j.first_seen_at,

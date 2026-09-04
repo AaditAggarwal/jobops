@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import sys
 
+from jobops.db import require_db
 from jobops.enrich import dedup, retention, sponsor_match
 from jobops.ingest import ashby, github_repos, greenhouse, lever, smartrecruiters
 
@@ -25,6 +26,8 @@ POLLERS = [
 
 
 def main() -> int:
+    """Run every poller and enrichment step once; returns an exit code."""
+    require_db("poll_all")  # fail in one second, not once per poller
     failed = []
     for name, run in POLLERS:
         try:

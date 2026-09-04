@@ -12,7 +12,7 @@ from typing import Any
 
 import httpx
 
-from jobops.db import get_conn, heartbeat
+from jobops.db import get_conn, heartbeat, require_db
 from jobops.ingest.common import (
     get_with_backoff,
     insert_job,
@@ -64,6 +64,7 @@ def poll_board(token: str, client: httpx.Client) -> list[str]:
 
 def run() -> None:
     """Poll every watched Lever board sequentially; one failure never kills the run."""
+    require_db("lever")
     tokens = shard_tokens(load_watchlist().get("lever", []))
     new_total = failures = notified = 0
     t0 = time.monotonic()

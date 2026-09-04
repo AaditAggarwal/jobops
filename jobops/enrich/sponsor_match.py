@@ -17,7 +17,7 @@ from typing import Any
 
 from rapidfuzz import fuzz
 
-from jobops.db import get_conn, heartbeat
+from jobops.db import get_conn, heartbeat, require_db
 
 MATCH_THRESHOLD = 0.90  # token_sort_ratio/100 below this -> no match at all
 
@@ -94,6 +94,7 @@ def score_company(cur, norm_name: str) -> tuple[float, str]:
 
 def run() -> None:
     """Score every company still marked sponsor_status='unknown'."""
+    require_db("sponsor_match")
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute("SELECT count(*) AS n FROM sponsor_records")
         if cur.fetchone()["n"] == 0:
